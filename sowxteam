@@ -1,0 +1,213 @@
+getgenv().SecureMode = true
+
+-- UI Rayfield
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+    Name = "SOWxTEAM | By RodrigoGTyx",
+    LoadingTitle = "SOWxTEAM Loader",
+    LoadingSubtitle = "By RodrigoGTyx",
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = "SOWxTEAM",
+        FileName = "Settings"
+    },
+    Discord = {Enabled = false},
+    KeySystem = false,
+})
+
+local MainTab = Window:CreateTab("INÍCIO")
+local SettingsTab = Window:CreateTab("OUTROS")
+
+-- Variáveis
+local ESP_ENABLED = false
+local AIMBOT_ENABLED = false
+local TEAM_CHECK = true
+local SPEED_ENABLED = false
+local AIM_SMOOTH = 0.2
+local BOOSTED_SPEED = 52
+local DEFAULT_SPEED = 16
+local AIM_FOV = 200
+local ESPColor = Color3.fromRGB(255, 0, 0)
+
+-- Serviços
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+local mouse = LocalPlayer:GetMouse()
+
+-- Funções auxiliares
+local function GetEnemies()
+    local enemies = {}
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            if not TEAM_CHECK or player.Team ~= LocalPlayer.Team then
+                table.insert(enemies, player)
+            end
+        end
+    end
+    return enemies
+end
+
+-- ESP Ultra Leve com Highlight (Chams)
+local function CreateHighlight(player)
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "SOWxESP_" .. player.Name
+    highlight.Adornee = player.Character
+    highlight.FillColor = ESPColor
+    highlight.OutlineColor = Color3.new(0, 0, 0)
+    highlight.FillTransparency = 0.5
+    highlight.OutlineTransparency = 0
+    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    highlight.Parent = game.CoreGui
+    return highlight
+end
+
+local function RemoveHighlight(player)
+    local highlight = game.CoreGui:FindFirstChild("SOWxESP_" .. player.Name)
+    if highlight then
+        highlight:Destroy()
+    end
+end
+
+local function UpdateESP()
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            if not TEAM_CHECK or player.Team ~= LocalPlayer.Team then
+                if not game.CoreGui:FindFirstChild("SOWxESP_" .. player.Name) then
+                    CreateHighlight(player)
+                end
+            else
+                RemoveHighlight(player)
+            end
+        else
+            RemoveHighlight(player)
+        end
+    end
+end
+
+Players.PlayerRemoving:Connect(function(player)
+    RemoveHighlight(player)
+end)
+
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function()
+        task.wait(0.5)
+        UpdateESP()
+    end)
+end)
+
+-- Aimbot
+local function GetClosestTarget()
+    local closest, shortest = nil, AIM_FOV
+    for _, player in pairs(GetEnemies()) do
+        local part = player.Character and player.Character:FindFirstChild("Head")
+        if part then
+            local screenPos, visible = Camera:WorldToViewportPoint(part.Position)
+            if visible then
+                local dist = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(mouse.X, mouse.Y)).Magnitude
+                if dist < shortest then
+                    shortest = dist
+                    closest = part
+                end
+            end
+        end
+    end
+    return closest
+end
+
+-- Speed Hack
+local function UpdateSpeed()
+    local humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+    if humanoid then
+        humanoid.WalkSpeed = SPEED_ENABLED and BOOSTED_SPEED or DEFAULT_SPEED
+    end
+end
+
+LocalPlayer.CharacterAdded:Connect(function(char)
+    char:WaitForChild("Humanoid")
+    task.wait(0.1)
+    UpdateSpeed()
+end)
+
+-- UI - MainTab
+MainTab:CreateToggle({
+    Name = "ESP (Chams)",
+    CurrentValue = false,
+    Callback = function(v)
+        ESP_ENABLED = v
+        if not v then
+            for _, p in ipairs(Players:GetPlayers()) do
+                RemoveHighlight(p)
+            end
+        end
+    end
+})
+
+MainTab:CreateToggle({
+    Name = "Aimbot (Segurar botão direito)",
+    CurrentValue = false,
+    Callback = function(v) AIMBOT_ENABLED = v end
+})
+
+MainTab:CreateToggle({
+    Name = "Team Check (Desative se o ESP não aparecer)",
+    CurrentValue = true,
+    Callback = function(v) TEAM_CHECK = v end
+})
+
+MainTab:CreateToggle({
+    Name = "Speed Hack",
+    CurrentValue = false,
+    Callback = function(v)
+        SPEED_ENABLED = v
+        UpdateSpeed()
+    end
+})
+
+-- UI - SettingsTab
+SettingsTab:CreateSlider({
+    Name = "FOV",
+    Range = {50, 500},
+    Increment = 5,
+    CurrentValue = AIM_FOV,
+    Callback = function(v) AIM_FOV = v end
+})
+
+SettingsTab:CreateSlider({
+    Name = "Smooth",
+    Range = {1, 100},
+    Increment = 1,
+    CurrentValue = AIM_SMOOTH * 100,
+    Callback = function(v) AIM_SMOOTH = v / 100 end
+})
+
+SettingsTab:CreateColorPicker({
+    Name = "ESP Color",
+    Color = ESPColor,
+    Callback = function(v) ESPColor = v
+        for _, obj in ipairs(game.CoreGui:GetChildren()) do
+            if obj:IsA("Highlight") and string.find(obj.Name, "SOWxESP_") then
+                obj.FillColor = v
+            end
+        end
+    end
+})
+
+-- Loop Principal
+RunService.Heartbeat:Connect(function()
+    if ESP_ENABLED then
+        UpdateESP()
+    end
+
+    if AIMBOT_ENABLED and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
+        local target = GetClosestTarget()
+        if target then
+            local dir = (target.Position - Camera.CFrame.Position).Unit
+            local newCF = Camera.CFrame:Lerp(CFrame.new(Camera.CFrame.Position, Camera.CFrame.Position + dir), AIM_SMOOTH)
+            Camera.CFrame = newCF
+        end
+    end
+end)
