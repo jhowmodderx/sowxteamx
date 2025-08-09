@@ -1,92 +1,115 @@
--- Ghost Gui UI Library
+-- Carregar a biblioteca Ghost Gui UI
 loadstring(game:HttpGet('https://raw.githubusercontent.com/GhostPlayer352/UI-Library/refs/heads/main/Ghost%20Gui'))()
-game.CoreGui.GhostGui.MainFrame.Title.Text = "Vox Seas Script SOWxTEAM - Auto Farm"
 
--- Função AddContent
-AddContent("TextButton", "Auto Farm", [[
-    -- Código para iniciar o Auto Farm
-    _ENV.OnFarm = true
-    task.spawn(function()
-        while task.wait(Settings.dSpeed) and _ENV.OnFarm do
-            -- Lógica de Auto Farm
-            local CurrentQuest = a()
-            if not CurrentQuest then continue end
-            if not ten(CurrentQuest.Target) then
-                ete(CurrentQuest.NpcName, CurrentQuest.Id)
-                continue
-            end
-            local Enemy = clst(CurrentQuest.Target)
-            if not Enemy then continue end
-            CurrentTarget = Enemy
-            local HumanoidRootPart = Enemy:FindFirstChild("HumanoidRootPart")
-            local Humanoid = Enemy:FindFirstChild("Humanoid")
-            if HumanoidRootPart and Humanoid and Humanoid.Health > 0 then
-                -- Se "Bring Mob" estiver ativado, traga o mob para perto
-                if _ENV.BringMob then
-                    brnge(CurrentQuest.Target, HumanoidRootPart.CFrame)
-                end
-                -- Teleporta o jogador para o mob
-                local targetCFrame = HumanoidRootPart.CFrame * CFrame.new(0, 7.5, 0) * CFrame.Angles(math.rad(-90), 0, 0)
-                if not tepe(targetCFrame) then
-                    if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
-                        Player.Character.HumanoidRootPart.CFrame = targetCFrame
+game.CoreGui.GhostGui.MainFrame.Title.Text = "SOWxTEAM - Vox Seas"
+
+-- Variáveis do script
+local _ENV = (getgenv or getrenv or getfenv)()
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
+local DialogueEvent = ReplicatedStorage.BetweenSides.Remotes.Events.DialogueEvent
+local CombatEvent = ReplicatedStorage.BetweenSides.Remotes.Events.CombatEvent
+local ToolEvent = ReplicatedStorage.BetweenSides.Remotes.Events.ToolsEvent
+local QuestsNpcs = workspace.IgnoreList.Int.NPCs.Quests
+local Enemys = workspace.Playability.Enemys
+local QuestsDecriptions = require(ReplicatedStorage.MainModules.Essentials.QuestDescriptions)
+local EnemiesFolders = {}
+local CFrameAngle = CFrame.Angles(math.rad(-90), 0, 0)
+
+-- Função para obter a quest atual
+local function a()
+    local QuestsList = {}
+    local CurrentQuest = nil
+    local CurrentLevel = -1
+    for _, QuestData in QuestsDecriptions do
+        if QuestData.Goal <= 1 then
+            continue
+        end
+        table.insert(QuestsList, {
+            Level = QuestData.MinLevel,
+            Target = QuestData.Target,
+            NpcName = QuestData.Npc,
+            Id = QuestData.Id
+        })
+    end
+    table.sort(QuestsList, function(a, b)
+        return a.Level > b.Level
+    end)
+    local function b()
+        local Level = nil
+        local success, result = pcall(function()
+            local mainUI = Player.PlayerGui:FindFirstChild("MainUI")
+            if mainUI then
+                local mainFrame = mainUI:FindFirstChild("MainFrame")
+                if mainFrame then
+                    local statsFrame = mainFrame:FindFirstChild("StastisticsFrame") or mainFrame:FindFirstChild("StatisticsFrame")
+                    if statsFrame then
+                        local levelBG = statsFrame:FindFirstChild("LevelBackground")
+                        if levelBG then
+                            local levelText = levelBG:FindFirstChild("Level")
+                            if levelText and levelText.Text then
+                                return tonumber(levelText.Text)
+                            end
+                        end
+                        for _, child in pairs(statsFrame:GetDescendants()) do
+                            if child:IsA("TextLabel") and child.Text:match("^%d+$") then
+                                local num = tonumber(child.Text)
+                                if num and num >= 1 and num <= 2000 then
+                                    return num
+                                end
+                            end
+                        end
                     end
                 end
-                task.wait(0)
-                -- Atacar inimigos da quest
-                local AllQuestEnemies = pgaall(CurrentQuest.Target)
-                if #AllQuestEnemies > 0 then
-                    faz(AllQuestEnemies)
-                end
-                -- Ativa o ataque do personagem
-                d()
+            end
+            return 1
+        end)
+        if success and result then
+            Level = result
+        else
+            Level = 1
+        end
+        if Level == CurrentLevel then
+            return CurrentQuest
+        end
+        for _, QuestData in QuestsList do
+            if QuestData.Level <= Level then
+                CurrentLevel, CurrentQuest = Level, QuestData
+                return QuestData
             end
         end
-    end)
-]])
-
--- Caixa de texto para o Quest
-TextBox = AddContent("TextBox", "Texto do Quest:")
-TextBox:GetPropertyChangedSignal("Text"):Connect(function()
-    print("Texto da Quest: " .. TextBox.Text)
-end)
-
--- Toggle para AutoStats
-AddContent("Toogle", "Ativar AutoStats", [[
-    -- Ativa a melhoria automática de stats
-    Settings.AutoStats = true
-    while Settings.AutoStats do
-        local remote = ReplicatedStorage.BetweenSides.Remotes.Events.StatsEvent
-        if remote then
-            local args = {
-                "UpgradeStat",
-                {
-                    Strength = Settings.SelectedStat == "Stamina" and 1 or 0,
-                    Defense = Settings.SelectedStat == "Vida" and 1 or 0,
-                    Sword = Settings.SelectedStat == "Espada" and 1 or 0,
-                    Gun = Settings.SelectedStat == "Armas" and 1 or 0,
-                    DevilFruit = Settings.SelectedStat == "Frutas" and 1 or 0
-                }
-            }
-            pcall(function()
-                remote:FireServer(unpack(args))
-            end)
-        end
-        task.wait(0.1)
+        return nil
     end
-]])
+    return b()
+end
 
--- Switch para Bring Mob (Quest)
-AddContent("Switch", "Juntar Todos os NPC (Quest)", [[
-    -- Alterna a funcionalidade de trazer o mob para o jogador.
-    _ENV.BringMob = not _ENV.BringMob
-    if _ENV.BringMob then
-        -- Adicione a lógica de trazer o mob
-        brnge(CurrentQuest.Target, Enemy.HumanoidRootPart.CFrame)
-    end
-]])
+-- Definições de configurações
+local Settings = {
+    ClickV2 = false,
+    TweenSpeed = 270,
+    SelectedTool = "CombatType",
+    BringMobDistance = 35,
+    dSpeed = 0.05,
+    NoClip = false,
+    AutoStats = false,
+    SelectedStat = "Strength"
+}
 
--- Função para verificar se o jogador está vivo
+local EquippedTool = nil
+local CurrentTarget = nil
+local conepc = _ENV.cnn or {}
+_ENV.cnn = conepc
+
+for i = 1, #conepc do
+    conepc[i]:Disconnect()
+end
+
+table.clear(conepc)
+
+-- Função para verificar se o personagem está vivo
 local function c(Character)
     if Character then
         local Humanoid = Character:FindFirstChildOfClass("Humanoid")
@@ -94,44 +117,76 @@ local function c(Character)
     end
 end
 
--- Função para verificar a distância entre o jogador e o inimigo
-local function clst(EnemyName)
-    local AllEnemies = pgaall(EnemyName)
-    if #AllEnemies == 0 then
-        return nil
+-- Criando a funcionalidade de velocidade e movimento
+local BodyVelocity = Instance.new("BodyVelocity")
+BodyVelocity.Velocity = Vector3.zero
+BodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+BodyVelocity.P = 1000
+
+if _ENV.tween_bodyvelocity then
+    _ENV.tween_bodyvelocity:Destroy()
+end
+
+_ENV.tween_bodyvelocity = BodyVelocity
+
+local CanCollideObjects = {}
+
+local function ss(Object)
+    if Object:IsA("BasePart") and Object.CanCollide then
+        table.insert(CanCollideObjects, Object)
     end
-    local ClosestEnemy = nil
-    local ShortestDistance = math.huge
-    for i, Enemy in ipairs(AllEnemies) do
-        if Enemy and Enemy.Parent then
-            local RootPart = Enemy:FindFirstChild("HumanoidRootPart")
-            local Humanoid = Enemy:FindFirstChild("Humanoid")
-            if RootPart and Humanoid and Humanoid.Health > 0 then
-                local Distance = Player:DistanceFromCharacter(RootPart.Position)
-                if Distance < ShortestDistance then
-                    ShortestDistance = Distance
-                    ClosestEnemy = Enemy
-                end
-            end
+end
+
+local function rrr(BasePart)
+    local index = table.find(CanCollideObjects, BasePart)
+    if index then
+        table.remove(CanCollideObjects, index)
+    end
+end
+
+local function ne(Character)
+    table.clear(CanCollideObjects)
+    for _, Object in Character:GetDescendants() do
+        ss(Object)
+    end
+    Character.DescendantAdded:Connect(ss)
+    Character.DescendantRemoving:Connect(rrr)
+end
+
+table.insert(conepc, Player.CharacterAdded:Connect(ne))
+task.spawn(ne, Player.Character)
+
+-- Função de controle de colisão
+local function np(Character)
+    if _ENV.OnFarm then
+        for i = 1, #CanCollideObjects do
+            CanCollideObjects[i].CanCollide = false
+        end
+    elseif Character.PrimaryPart and not Character.PrimaryPart.CanCollide then
+        for i = 1, #CanCollideObjects do
+            CanCollideObjects[i].CanCollide = true
         end
     end
-    return ClosestEnemy
 end
 
--- Função para a lógica de atacar o inimigo
-local function faz(Enemies)
-    local CurrentTime = workspace:GetServerTimeNow()
-    CombatEvent:FireServer("DealDamage", {
-        CallTime = CurrentTime,
-        DelayTime = 0,
-        Combo = 1,
-        Results = Enemies,
-        Damage = math.random(50, 150),
-        CriticalHit = math.random(1, 10) <= 3
-    })
+-- Função para atualizar a posição do jogador
+local function upe(Character)
+    local BasePart = Character:FindFirstChild("UpperTorso")
+    local Humanoid = Character:FindFirstChild("Humanoid")
+    local BodyVelocity = _ENV.tween_bodyvelocity
+    if _ENV.OnFarm and BasePart and Humanoid and Humanoid.Health > 0 then
+        if BodyVelocity.Parent ~= BasePart then
+            BodyVelocity.Parent = BasePart
+        end
+    elseif BodyVelocity.Parent then
+        BodyVelocity.Parent = nil
+    end
+    if BodyVelocity.Velocity ~= Vector3.zero and (not Humanoid or not Humanoid.SeatPart or not _ENV.OnFarm) then
+        BodyVelocity.Velocity = Vector3.zero
+    end
 end
 
--- Função para teletransportar o jogador
+-- Função de teleporte
 local function tepe(TargetCFrame)
     while not Player.Character or not c(Player.Character) do
         task.wait(1)
@@ -155,12 +210,12 @@ local function tepe(TargetCFrame)
         PrimaryPart.CFrame = TargetCFrame
         return true
     end
-    -- Teleportação suave com animação
+    -- Teleporte suave
     local tween = TweenCreator.new(PrimaryPart, Distance / Settings.TweenSpeed, "CFrame", TargetCFrame)
     return true
 end
 
--- Função para ativar ataque com a ferramenta equipada
+-- Função para atacar
 local function d()
     if not c(Player.Character) then
         return
@@ -169,7 +224,6 @@ local function d()
     if not Tool then
         return
     end
-    local CurrentTime = workspace:GetServerTimeNow()
     pcall(function()
         Tool:Activate()
         local Handle = Tool:FindFirstChild("Handle")
@@ -190,49 +244,164 @@ local function d()
         end
         ToolEvent:FireServer("Effects", 1)
         ToolEvent:FireServer("Activate", 1)
+        if Settings.ClickV2 then
+            for i = 1, 3 do
+                Tool:Activate()
+                task.wait(0.01)
+            end
+        end
     end)
 end
 
--- Função para interagir com a interface de ferramentas
-local ToolDropdown = Tabs.Main:AddDropdown("ToolDropdown", {
-    Title = "Selecione a Ferramenta",
-    Values = {},
-    Multi = false,
-    Default = nil
-})
+-- Função para realizar dano nos inimigos
+local function faz(Enemies)
+    CurrentTime = workspace:GetServerTimeNow()
+    CombatEvent:FireServer("DealDamage", {
+        CallTime = CurrentTime,
+        DelayTime = 0,
+        Combo = 1,
+        Results = Enemies,
+        Damage = math.random(50, 150),
+        CriticalHit = math.random(1, 10) <= 3
+    })
+end
 
--- Função para atualizar a lista de ferramentas
-local function RefreshTools()
-    local tools = {}
-    if Player and Player:FindFirstChild("Backpack") then
-        for _, tool in ipairs(Player.Backpack:GetChildren()) do
-            if tool:IsA("Tool") then
-                table.insert(tools, tool.Name)
+-- Função para selecionar a ferramenta
+local function IsSelectedTool(Tool)
+    return Tool:GetAttribute(Settings.SelectedTool)
+end
+
+local function EquipCombat(Activate)
+    if not c(Player.Character) then
+        return
+    end
+    if EquippedTool and IsSelectedTool(EquippedTool) then
+        if Activate then
+            if Settings.ClickV2 then
+                d()
+            else
+                EquippedTool:Activate()
+            end
+        end
+        if EquippedTool.Parent == Player.Backpack then
+            Player.Character.Humanoid:EquipTool(EquippedTool)
+        elseif EquippedTool.Parent ~= Player.Character then
+            EquippedTool = nil
+        end
+        return
+    end
+    local Equipped = Player.Character:FindFirstChildOfClass("Tool")
+    if Equipped and IsSelectedTool(Equipped) then
+        EquippedTool = Equipped
+        return
+    end
+    for _, Tool in Player.Backpack:GetChildren() do
+        if Tool:IsA("Tool") and IsSelectedTool(Tool) then
+            EquippedTool = Tool
+            Player.Character.Humanoid:EquipTool(Tool)
+            return
+        end
+    end
+end
+
+-- Criando a interface gráfica
+AddContent("TextButton", "Iniciar Auto Farm", [[
+    _ENV.OnFarm = true
+    task.spawn(function()
+        while task.wait(Settings.dSpeed) and _ENV.OnFarm do
+            -- Lógica de Auto Farm
+            local CurrentQuest = a()
+            if not CurrentQuest then
+                continue
+            end
+            if not ten(CurrentQuest.Target) then
+                ete(CurrentQuest.NpcName, CurrentQuest.Id)
+                continue
+            end
+            local Enemy = clst(CurrentQuest.Target)
+            if not Enemy then
+                continue
+            end
+            CurrentTarget = Enemy
+            local HumanoidRootPart = Enemy:FindFirstChild("HumanoidRootPart")
+            local Humanoid = Enemy:FindFirstChild("Humanoid")
+            if HumanoidRootPart and Humanoid and Humanoid.Health > 0 then
+                -- Trazer Mob (se ativado)
+                if _ENV.BringMob then
+                    brnge(CurrentQuest.Target, HumanoidRootPart.CFrame)
+                end
+                local targetCFrame = HumanoidRootPart.CFrame * CFrame.new(0, 7.5, 0) * CFrameAngle
+                if not tepe(targetCFrame) then
+                    if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+                        Player.Character.HumanoidRootPart.CFrame = targetCFrame
+                    end
+                end
+                -- Ataque
+                faz({Enemy})
+                d()
+            end
+        end
+    end)
+]])
+
+TextBox = AddContent("TextBox", "Texto da Quest")
+TextBox:GetPropertyChangedSignal("Text"):Connect(function()
+    print(TextBox.Text)
+end)
+
+AddContent("Toggle", "Ativar Auto Stats", [[
+    Settings.AutoStats = true
+    while Settings.AutoStats do
+        local remote = ReplicatedStorage.BetweenSides.Remotes.Events.StatsEvent
+        if remote then
+            local args = {
+                "UpgradeStat",
+                {
+                    Strength = Settings.SelectedStat == "Strength" and 1 or 0,
+                    Defense = Settings.SelectedStat == "Defense" and 1 or 0
+                    -- Adicione mais estatísticas conforme necessário
+                }
+            }
+            pcall(function()
+                remote:FireServer(unpack(args))
+            end)
+        end
+        task.wait(0.1)
+    end
+]])
+
+AddContent("Switch", "Ativar/Desativar Bring Mob", [[
+    _ENV.BringMob = not _ENV.BringMob
+    if _ENV.BringMob then
+        -- Trazer Mob
+    end
+]])
+
+AddContent("TextLabel", "SOWxTEAM - Controle de Missões e Ferramentas")
+
+-- Função de Teleporte para Ilhas
+AddContent("Dropdown", "Selecionar Ilha", [[
+    local map = workspace:FindFirstChild("Map")
+    local islands = {}
+    if map then
+        for _, island in ipairs(map:GetChildren()) do
+            if island:FindFirstChild("Base") then
+                table.insert(islands, island.Name)
             end
         end
     end
+    return islands
+]])
+
+-- Atualizar Ferramentas
+AddContent("Button", "Atualizar Ferramentas", [[
+    local tools = {}
+    for _, tool in ipairs(Player.Backpack:GetChildren()) do
+        if tool:IsA("Tool") then
+            table.insert(tools, tool.Name)
+        end
+    end
     ToolDropdown:SetValues(tools)
-end
+]])
 
--- Botão para atualizar as ferramentas
-local RefreshButton = Tabs.Main:AddButton({
-    Title = "Recarregar Ferramentas",
-    Callback = RefreshTools
-})
-
--- Chamada para inicializar a lista de ferramentas
-task.spawn(function()
-    task.wait(2)
-    RefreshTools()
-end)
-
--- Salvando as configurações
-SaveManager:SetLibrary(Fluent)
-InterfaceManager:SetLibrary(Fluent)
-SaveManager:IgnoreThemeSettings()
-SaveManager:SetIgnoreIndexes({})
-InterfaceManager:BuildInterfaceSection(Tabs.SettingsTab)
-SaveManager:BuildConfigSection(Tabs.SettingsTab)
-
--- Selecione a primeira guia
-Window:SelectTab(1)
+-- Outras interações podem ser adicionadas conforme necessário para o teletransporte, atualização de ferramentas e outras funcionalidades.
