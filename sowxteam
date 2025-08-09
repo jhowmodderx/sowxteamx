@@ -241,7 +241,7 @@ Tabs.Main:CreateButton("Activate Combat", {
     end
 })
 
-Tabs.Main:CreateButton("Teleport to Enemy", {
+Tabs.Main:CreateButton("Teleport to Nearest Enemy", {
     Text = "Teleport to Nearest Enemy",
     Callback = function()
         local Enemy = clst("EnemyName")
