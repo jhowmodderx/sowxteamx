@@ -1,63 +1,9 @@
--- Adicione estas linhas no início do seu script, antes de qualquer uso das variáveis globais
-local game = game
-local workspace = workspace
-local tick = tick or os.clock
-local task = task or {}
-local TweenInfo = TweenInfo or function(time, easingStyle)
-    return {
-        Time = time,
-        EasingStyle = easingStyle or Enum.EasingStyle.Linear
-    }
-end
-local Instance = Instance
-local Vector3 = Vector3
-
--- Se Vector3 não estiver definido, crie uma função simulada
-if not Vector3 then
-    Vector3 = {
-        new = function(x, y, z) return {X = x, Y = y, Z = z} end,
-        zero = {X = 0, Y = 0, Z = 0},
-        one = {X = 1, Y = 1, Z = 1}
-    }
-end
-
--- Se TweenInfo não estiver disponível, crie uma implementação básica
-if not TweenInfo then
-    TweenInfo = function(time, easingStyle)
-        return {
-            Time = time,
-            EasingStyle = easingStyle or Enum.EasingStyle.Linear
-        }
-    end
-end
-
--- Se task não estiver disponível, crie funções básicas
-if not task then
-    task = {
-        wait = function(seconds)
-            local start = tick()
-            while tick() - start < seconds do end
-        end,
-        spawn = function(f)
-            coroutine.resume(coroutine.create(f))
-        end
-    }
-end
-
-
--- Versão adaptada para MoonSec V3 (usa getgenv/getrenv/getfenv em vez de _ENV direto)
-local get_env = (getgenv or getrenv or getfenv)
-local env = get_env() -- tabela global persistente (compatível com diferentes ambientes)
-
--- Serviços
+local _ENV = (getgenv or getrenv or getfenv)()
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
--- Player (aguarda se necessário)
-local Player = Players.LocalPlayer or Players.PlayerAdded:Wait()
-
--- Remotes / referências
+local Player = Players.LocalPlayer
 local DialogueEvent = ReplicatedStorage.BetweenSides.Remotes.Events.DialogueEvent
 local CombatEvent = ReplicatedStorage.BetweenSides.Remotes.Events.CombatEvent
 local ToolEvent = ReplicatedStorage.BetweenSides.Remotes.Events.ToolsEvent
@@ -65,14 +11,13 @@ local QuestsNpcs = workspace.IgnoreList.Int.NPCs.Quests
 local Enemys = workspace.Playability.Enemys
 local QuestsDecriptions = require(ReplicatedStorage.MainModules.Essentials.QuestDescriptions)
 local EnemiesFolders = {}
-local CFrameAngle = CFrame.Angles(math.rad(-90), 0, 0)
+local CFrameAngle = CFrame.Angles(math.rad(- 90), 0, 0)
 
--- Função para escolher quest atual (mantive estrutura original)
 local function a()
     local QuestsList = {}
     local CurrentQuest = nil
-    local CurrentLevel = -1
-    for _, QuestData in pairs(QuestsDecriptions) do
+    local CurrentLevel = - 1
+    for _, QuestData in QuestsDecriptions do
         if QuestData.Goal <= 1 then
             continue
         end
@@ -123,7 +68,7 @@ local function a()
         if Level == CurrentLevel then
             return CurrentQuest
         end
-        for _, QuestData in ipairs(QuestsList) do
+        for _, QuestData in QuestsList do
             if QuestData.Level <= Level then
                 CurrentLevel, CurrentQuest = Level, QuestData
                 return QuestData
@@ -138,7 +83,7 @@ local Settings = {
     ClickV2 = false,
     TweenSpeed = 270,
     SelectedTool = "CombatType",
-    BringMobDistance = 25,
+    BringMobDistance = 35,
     dSpeed = 0.05,
     NoClip = false,
     AutoStats = false,
@@ -569,6 +514,7 @@ end
 
 
 
+
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
@@ -592,6 +538,9 @@ local Tabs = {
     Misc = Window:AddTab({
         Title = "Outros",
     }),
+    Server = Window:AddTab({
+        Title = "Server",
+        }),
 }
 
 Tabs.Main:AddSection("Auto Farm")
@@ -1104,28 +1053,6 @@ Tabs.Misc:AddToggle("TP Vendedor do Estilo de luta ", {
     end
 })
 
--- Função de teleporte
-local function tepe(TargetCFrame)
-    local Player = game.Players.LocalPlayer
-    local Character = Player.Character
-    if not Character or not Character.PrimaryPart then return false end
-    if (tick() - lastTeleport) <= 0.3 and lastCFrame == TargetCFrame then return false end
-
-    lastTeleport = tick()
-    lastCFrame = TargetCFrame
-
-    local HumanoidRootPart = Character:FindFirstChild("HumanoidRootPart")
-    if HumanoidRootPart then
-        HumanoidRootPart.CanCollide = false
-        HumanoidRootPart.CFrame = TargetCFrame
-        task.wait(0.1)
-        HumanoidRootPart.CanCollide = true
-        return true
-    end
-
-    return false
-end
-
 -- Função de interação com o NPC "Instinct Teacher"
 local function interagirComInstinctTeacher()
     local NPC = workspace.IgnoreList.Int.NPCs.Shops["Skypie Upper"]["Instinct Teacher"]
@@ -1153,6 +1080,249 @@ Tabs.Misc:AddToggle("TP Vendedor do Haki da Visao", {
         if Value then interagirComInstinctTeacher() end
     end
 })
+
+Tabs.Server:AddSection("Server Options")
+
+Tabs.Server:AddToggle("Auto Hop Server", {
+    Title = "Auto Hop Server",
+    Default = false,
+    Callback = function(value)
+        if value then
+            -- Função para fazer o hop de servidor
+            local function hopToNewServer()
+                local TeleportService = game:GetService("TeleportService")
+                local HttpService = game:GetService("HttpService")
+                
+                -- Tentar encontrar um servidor com vaga
+                local success, servers = pcall(function()
+                    local response = HttpService:JSONDecode(game:HttpGetAsync(
+                        "https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Asc&limit=100"
+                    ))
+                    return response.data
+                end)
+                
+                if success and servers then
+                    local availableServers = {}
+                    for _, server in ipairs(servers) do
+                        if server.playing < server.maxPlayers and server.id ~= game.JobId then
+                            table.insert(availableServers, server.id)
+                        end
+                    end
+                    
+                    if #availableServers > 0 then
+                        local randomServer = availableServers[math.random(1, #availableServers)]
+                        TeleportService:TeleportToPlaceInstance(game.PlaceId, randomServer)
+                    else
+                        TeleportService:Teleport(game.PlaceId)
+                    end
+                else
+                    TeleportService:Teleport(game.PlaceId)
+                end
+            end
+            
+            -- Executa o hop imediatamente quando ativado
+            hopToNewServer()
+            
+            -- Conecta para continuar hopping enquanto o toggle estiver ativo
+            spawn(function()
+                while wait(5) and _ENV.AutoHopEnabled do
+                    hopToNewServer()
+                end
+            end)
+        else
+            -- Desativa o auto hop
+            _ENV.AutoHopEnabled = false
+        end
+    end
+})
+
+
+
+
+-- Adiciona a seção de Auto Skills
+Tabs.Main:AddSection("Auto Skills")
+
+-- Cria o dropdown para seleção de teclas
+local skillKeysDropdown = Tabs.Main:AddDropdown("SkillKeysDropdown", {
+    Title = "Selecionar Teclas para Auto Skills",
+    Values = {"Z", "X", "C", "V", "B"},
+    Multi = true,
+    Default = {"Z", "X"},
+    Callback = function(selectedKeys)
+        _ENV.SelectedSkillKeys = selectedKeys
+    end
+})
+
+-- Toggle para ativar/desativar o Auto Skills
+Tabs.Main:AddToggle("AutoSkillsToggle", {
+    Title = "Ativar Auto Skills",
+    Default = false,
+    Callback = function(value)
+        _ENV.AutoSkillsEnabled = value
+        
+        if value then
+            -- Função otimizada para pressionar as teclas
+            local function pressSelectedKeys()
+                local selectedKeys = _ENV.SelectedSkillKeys or {"Z", "X"}
+                local virtualInput = game:GetService("VirtualInputManager")
+                local keyPriority = {
+                    Z = 1,
+                    X = 2,
+                    C = 3,
+                    V = 4,
+                    B = 5
+                }
+                
+                -- Ordena as teclas por prioridade
+                table.sort(selectedKeys, function(a, b)
+                    return keyPriority[a] < keyPriority[b]
+                end)
+                
+                -- Pressão mais robusta das teclas
+                for _, key in ipairs(selectedKeys) do
+                    local keyCode = Enum.KeyCode[key]
+                    
+                    -- Pressão mais longa para teclas C, V, B
+                    local pressDuration = (key == "C" or key == "V" or key == "B") and 0.15 or 0.1
+                    
+                    virtualInput:SendKeyEvent(true, keyCode, false, nil)
+                    task.wait(pressDuration)
+                    virtualInput:SendKeyEvent(false, keyCode, false, nil)
+                    
+                    -- Intervalo maior após teclas especiais
+                    local waitTime = (key == "C" or key == "V" or key == "B") and 0.3 or 0.2
+                    task.wait(waitTime)
+                end
+            end
+            
+            -- Sistema de verificação de skills
+            local function skillsAvailable()
+                -- Verifica PC
+                local pcFrame = Player.PlayerGui:FindFirstChild("MainUI")
+                pcFrame = pcFrame and pcFrame:FindFirstChild("SkillsFrame")
+                
+                -- Verifica Mobile
+                local mobileFrame = Player.PlayerGui:FindFirstChild("MobileGui")
+                mobileFrame = mobileFrame and mobileFrame:FindFirstChild("SkillsFrameMobile")
+                
+                return (pcFrame and pcFrame.Visible) or (mobileFrame and mobileFrame.Visible)
+            end
+            
+            -- Loop principal otimizado
+            spawn(function()
+                while _ENV.AutoSkillsEnabled do
+                    if skillsAvailable() then
+                        -- Executa 2 ciclos rápidos para garantir ativação
+                        for i = 1, 2 do
+                            pressSelectedKeys()
+                            task.wait(0.1)
+                        end
+                    end
+                    task.wait(0.4) -- Intervalo entre ciclos
+                end
+            end)
+        end
+    end
+})
+
+
+-- Verifica se é mobile
+local isMobile = game:GetService("UserInputService").TouchEnabled
+
+if isMobile then
+    -- Cria o botão flutuante
+    local mobileButton = Instance.new("TextButton")
+    mobileButton.Name = "MobileToggleButton"
+    mobileButton.Text = "☰"
+    mobileButton.TextSize = 24
+    mobileButton.Size = UDim2.new(0, 50, 0, 50)
+    mobileButton.Position = UDim2.new(1, -60, 1, -60)
+    mobileButton.AnchorPoint = Vector2.new(1, 1)
+    mobileButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    mobileButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    mobileButton.BorderSizePixel = 0
+    mobileButton.ZIndex = 100
+    
+    -- Arredonda o botão
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(1, 0)
+    corner.Parent = mobileButton
+    
+    -- Adiciona sombra
+    local shadow = Instance.new("ImageLabel")
+    shadow.Name = "Shadow"
+    shadow.Image = "rbxassetid://1316045217"
+    shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+    shadow.ImageTransparency = 0.8
+    shadow.ScaleType = Enum.ScaleType.Slice
+    shadow.SliceCenter = Rect.new(10, 10, 118, 118)
+    shadow.Size = UDim2.new(1, 10, 1, 10)
+    shadow.Position = UDim2.new(0.5, -5, 0.5, -5)
+    shadow.AnchorPoint = Vector2.new(0.5, 0.5)
+    shadow.BackgroundTransparency = 1
+    shadow.Parent = mobileButton
+    
+    -- Adiciona à interface do jogador
+    mobileButton.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+    
+    -- Variável para controlar o estado
+    local interfaceVisible = true
+    
+    -- Função para alternar a interface
+    local function toggleInterface()
+        interfaceVisible = not interfaceVisible
+        
+        -- Encontra todos os elementos da interface Fluent
+        local mainWindow = game:GetService("CoreGui"):FindFirstChild("Fluent_Main")
+        if mainWindow then
+            mainWindow.Enabled = interfaceVisible
+            mobileButton.Text = interfaceVisible and "☰" or "✕"
+        end
+    end
+    
+    -- Configura o clique do botão
+    mobileButton.MouseButton1Click:Connect(toggleInterface)
+    
+    -- Opcional: Botão de arrastar
+    local dragging, dragInput, dragStart, startPos
+    local userInputService = game:GetService("UserInputService")
+    
+    local function updateInput(input)
+        local delta = input.Position - dragStart
+        mobileButton.Position = UDim2.new(
+            startPos.X.Scale, 
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale, 
+            startPos.Y.Offset + delta.Y
+        )
+    end
+    
+    mobileButton.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = mobileButton.Position
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+    
+    mobileButton.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+    
+    userInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            updateInput(input)
+        end
+    end)
+end
 
 SaveManager:SetLibrary(Fluent)
 InterfaceManager:SetLibrary(Fluent)
