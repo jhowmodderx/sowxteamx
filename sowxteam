@@ -13,7 +13,6 @@ local QuestsDecriptions = require(ReplicatedStorage.MainModules.Essentials.Quest
 local EnemiesFolders = {}
 local CFrameAngle = CFrame.Angles(math.rad(- 90), 0, 0)
 
-
 local function a()
     local QuestsList = {}
     local CurrentQuest = nil
@@ -543,7 +542,6 @@ local Window = Fluent:CreateWindow({
     Size = UDim2.fromOffset(580, 460),
     Acrylic = false,
     Theme = "Rose",
-    icon = "rbxassests//",
     MinimizeKey = Enum.KeyCode.LeftAlt
 })
 
@@ -558,6 +556,8 @@ local Tabs = {
         Title = "Teleportes",
     }),
 }
+
+
 
 Tabs.Disc:AddSection("About We")
 Tabs.Disc:AddButton({
@@ -703,55 +703,44 @@ task.spawn(function()
 end)
 Tabs.Main:AddSection("Auto Stats")
 local StatDropdown = Tabs.Main:AddDropdown("StatDropdown", {
-    Title = "Selecione quais stats você quer",
+    Title = "Selecione onde colocar pontos",
     Values = {
-        "Stamina",
+        "Soco",
         "Vida",
         "Espada",
-        "Armas",
-        "Frutas"
+        "Arma",
+        "Fruta"
     },
-    Multi = true,  -- Habilita a seleção múltipla
-    Default = {"Strength"},  -- Seleção inicial
-    Callback = function(Values)
-        Settings.SelectedStats = Values  -- Armazena os stats selecionados
+    Multi = false,
+    Default = "Strength",
+    Callback = function(Value)
+        Settings.SelectedStat = Value
     end
 })
-
 local AutoStatsToggle = Tabs.Main:AddToggle("AutoStatsToggle", {
-    Title = "Auto Stats Selected",
+    Title = "Auto Stats Selecionado",
     Default = false,
     Callback = function(Value)
         Settings.AutoStats = Value
         if Value then
             coroutine.wrap(function()
                 while Settings.AutoStats do
-                    -- Inicializa os stats com 0
-                    local statsToUpgrade = {
-                        Defense = 0,
-                        Sword = 0,
-                        Gun = 0,
-                        Strength = 0,
-                        DevilFruit = 0
-                    }
-
-                    -- Atribui 3 pontos para cada stat selecionado
-                    for _, stat in ipairs(Settings.SelectedStats) do
-                        statsToUpgrade[stat] = 3
-                    end
-
-                    -- Envia os dados de atualização para o servidor
                     local remote = ReplicatedStorage.BetweenSides.Remotes.Events.StatsEvent
                     if remote then
                         local args = {
                             "UpgradeStat",
-                            statsToUpgrade
+                            {
+                                Defense = Settings.SelectedStat == "Vida" and 1 or 0,
+                                Sword = Settings.SelectedStat == "Espada" and 1 or 0,
+                                Gun = Settings.SelectedStat == "Arma" and 1 or 0,
+                                Strength = Settings.SelectedStat == "Soco" and 1 or 0,
+                                DevilFruit = Settings.SelectedStat == "Fruta" and 1 or 0
+                            }
                         }
                         pcall(function()
                             remote:FireServer(unpack(args))
                         end)
                     end
-
                     task.wait(0.1)
                 end
             end)()
@@ -844,51 +833,6 @@ Tabs.Misc:AddToggle("AutoStoreToggle", {
         end
     end
 })
-
--- Seção de Teleporte para Jogador
-Tabs.Main:AddSection("Teleport to Player")
-
--- Dropdown para selecionar um jogador
-local PlayerDropdown = Tabs.Main:AddDropdown("PlayerDropdown", {
-    Title = "Selecione um jogador",
-    Values = {},  -- Lista de jogadores
-    Multi = false,  -- Apenas 1 jogador pode ser selecionado por vez
-    Default = nil,
-    Callback = function(Values)
-        Settings.SelectedPlayer = Values[1]  -- Armazena o nome do jogador selecionado
-        
-        -- Verifica se o jogador foi selecionado
-        if Settings.SelectedPlayer then
-            local selectedPlayer = Players:FindFirstChild(Settings.SelectedPlayer)
-            if selectedPlayer and selectedPlayer.Character then
-                local targetCFrame = selectedPlayer.Character:FindFirstChild("HumanoidRootPart").CFrame
-                if targetCFrame then
-                    -- Teleporta o jogador para o HumanoidRootPart do jogador selecionado
-                    Player.Character.HumanoidRootPart.CFrame = targetCFrame
-                end
-            end
-        end
-    end
-})
-
--- Função para atualizar a lista de jogadores
-local function updatePlayerList()
-    local playerNames = {}
-    for _, p in ipairs(Players:GetPlayers()) do
-        if p.Name ~= Player.Name then
-            table.insert(playerNames, p.Name)
-        end
-    end
-    PlayerDropdown:SetValues(playerNames)
-end
-
--- Atualizar a lista ao iniciar
-updatePlayerList()
-
--- Atualizar a lista a cada vez que um jogador entra ou sai
-Players.PlayerAdded:Connect(updatePlayerList)
-Players.PlayerRemoved:Connect(updatePlayerList)
-
 
 SaveManager:SetLibrary(Fluent)
 InterfaceManager:SetLibrary(Fluent)
