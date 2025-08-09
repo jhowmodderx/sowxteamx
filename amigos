@@ -516,8 +516,149 @@ end
 
 
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
-local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/jhowmodderxxxx/haxstore/refs/heads/main/savemanagerhax"))()
+local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/jhowmodderxxxx/haxstore/refs/heads/main/interface"))()
+
+local DeviceType = game:GetService("UserInputService").TouchEnabled and "Mobile" or "PC"
+
+
+--<>----<>----<>----< Anti Afk >----<>----<>----<>--
+game.Players.LocalPlayer.Idled:Connect(function()
+    VirtualUser:CaptureController()
+    VirtualUser:ClickButton2(Vector2.new())
+    print("Roblox Tried to kick you but we didn't let them kick you :D")
+end)
+warn("[Anti Afk] - loaded successfully") 
+
+
+local UserInputService = game:GetService("UserInputService")
+local Player = game.Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+
+local ClickButton = Instance.new("ScreenGui")
+ClickButton.Parent = PlayerGui
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "LogoButton"
+MainFrame.Parent = ClickButton
+MainFrame.AnchorPoint = Vector2.new(1, 0)
+MainFrame.BackgroundTransparency = 0.8
+MainFrame.BackgroundColor3 = Color3.fromRGB(38, 38, 38)
+MainFrame.BorderSizePixel = 0
+MainFrame.Position = UDim2.new(1, -60, 0, 10)
+MainFrame.Size = UDim2.new(0, 45, 0, 45)
+
+local UICorner = Instance.new("UICorner")
+UICorner.Parent = MainFrame
+
+local TextButton = Instance.new("TextButton")
+TextButton.Parent = MainFrame
+TextButton.BackgroundColor3 = Color3.fromRGB(0, 255, 255)
+TextButton.BackgroundTransparency = 1
+TextButton.BorderSizePixel = 0
+TextButton.Size = UDim2.new(1, 0, 1, 0)
+TextButton.Text = "SOWxTEAM"
+TextButton.TextColor3 = Color3.fromRGB(170, 0, 255)
+TextButton.TextSize = 14
+TextButton.AutoButtonColor = false
+
+
+local ImageLabel = Instance.new("ImageLabel")
+ImageLabel.Parent = TextButton
+ImageLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+ImageLabel.BackgroundTransparency = 1
+ImageLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
+ImageLabel.Size = UDim2.new(1, 0, 1, 0)
+ImageLabel.Image = "rbxassetid://78127779035849"
+ImageLabel.ZIndex = 1
+
+TextButton.ZIndex = 2
+
+
+
+local ModMenu = Instance.new("Frame")
+ModMenu.Name = "ModMenu"
+ModMenu.Parent = PlayerGui
+ModMenu.AnchorPoint = Vector2.new(0.5, 0.5)
+ModMenu.BackgroundTransparency = 0.8
+ModMenu.BackgroundColor3 = Color3.fromRGB(38, 38, 38)
+ModMenu.BorderSizePixel = 0
+ModMenu.Position = UDim2.new(0.5, 0, 0.5, 0)
+ModMenu.Size = UDim2.new(0, 200, 0, 300)
+ModMenu.Visible = false
+
+local UICorner_2 = Instance.new("UICorner")
+UICorner_2.Parent = ModMenu
+
+TextButton.MouseButton1Click:Connect(function()
+    ModMenu.Visible = not ModMenu.Visible
+end)
+
+
+if DeviceType == "Mobile" then
+    MainFrame.Position = UDim2.new(1, -60, 0, 10)
+else
+    MainFrame.Position = UDim2.new(1, -120, 0, 10)
+
+end
+
+
+
+local UserInputService = game:GetService("UserInputService") 
+local dragging, dragInput, dragStart, startPos
+
+local function update(input)
+    local delta = input.Position - dragStart
+    MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+
+--mexer o flutuante com nome hax store no pc--
+MainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = MainFrame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then dragging = false
+                dragging = false
+
+                 end 
+  
+            end) 
+
+       end 
+
+  end)
+
+
+
+
+
+
+
+
+--mexer o flutuante com nome hax store no mobile--
+  MainFrame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+
+    end 
+
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        update(input)
+
+    end 
+end)
+
+
+TextButton.MouseButton1Click:Connect(function()
+    game:GetService("VirtualInputManager"):SendKeyEvent(true, "LeftAlt", false, game)
+    game:GetService("VirtualInputManager"):SendKeyEvent(false, "LeftAlt", false, game)
+end)
 
 local Window = Fluent:CreateWindow({
     Title = "SOWxTEAM",
@@ -528,8 +669,6 @@ local Window = Fluent:CreateWindow({
     Theme = "Amethyst",
     MinimizeKey = Enum.KeyCode.LeftAlt
 })
-
-
 
 local Tabs = {
     Main = Window:AddTab({
@@ -1225,104 +1364,6 @@ Tabs.Main:AddToggle("AutoSkillsToggle", {
     end
 })
 
-
--- Verifica se é mobile
-local isMobile = game:GetService("UserInputService").TouchEnabled
-
-if isMobile then
-    -- Cria o botão flutuante
-    local mobileButton = Instance.new("TextButton")
-    mobileButton.Name = "MobileToggleButton"
-    mobileButton.Text = "☰"
-    mobileButton.TextSize = 24
-    mobileButton.Size = UDim2.new(0, 50, 0, 50)
-    mobileButton.Position = UDim2.new(1, -60, 1, -60)
-    mobileButton.AnchorPoint = Vector2.new(1, 1)
-    mobileButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    mobileButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    mobileButton.BorderSizePixel = 0
-    mobileButton.ZIndex = 100
-    
-    -- Arredonda o botão
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(1, 0)
-    corner.Parent = mobileButton
-    
-    -- Adiciona sombra
-    local shadow = Instance.new("ImageLabel")
-    shadow.Name = "Shadow"
-    shadow.Image = "rbxassetid://1316045217"
-    shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
-    shadow.ImageTransparency = 0.8
-    shadow.ScaleType = Enum.ScaleType.Slice
-    shadow.SliceCenter = Rect.new(10, 10, 118, 118)
-    shadow.Size = UDim2.new(1, 10, 1, 10)
-    shadow.Position = UDim2.new(0.5, -5, 0.5, -5)
-    shadow.AnchorPoint = Vector2.new(0.5, 0.5)
-    shadow.BackgroundTransparency = 1
-    shadow.Parent = mobileButton
-    
-    -- Adiciona à interface do jogador
-    mobileButton.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
-    
-    -- Variável para controlar o estado
-    local interfaceVisible = true
-    
-    -- Função para alternar a interface
-    local function toggleInterface()
-        interfaceVisible = not interfaceVisible
-        
-        -- Encontra todos os elementos da interface Fluent
-        local mainWindow = game:GetService("CoreGui"):FindFirstChild("Fluent_Main")
-        if mainWindow then
-            mainWindow.Enabled = interfaceVisible
-            mobileButton.Text = interfaceVisible and "☰" or "✕"
-        end
-    end
-    
-    -- Configura o clique do botão
-    mobileButton.MouseButton1Click:Connect(toggleInterface)
-    
-    -- Opcional: Botão de arrastar
-    local dragging, dragInput, dragStart, startPos
-    local userInputService = game:GetService("UserInputService")
-    
-    local function updateInput(input)
-        local delta = input.Position - dragStart
-        mobileButton.Position = UDim2.new(
-            startPos.X.Scale, 
-            startPos.X.Offset + delta.X,
-            startPos.Y.Scale, 
-            startPos.Y.Offset + delta.Y
-        )
-    end
-    
-    mobileButton.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true
-            dragStart = input.Position
-            startPos = mobileButton.Position
-            
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
-                end
-            end)
-        end
-    end)
-    
-    mobileButton.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.Touch then
-            dragInput = input
-        end
-    end)
-    
-    userInputService.InputChanged:Connect(function(input)
-        if input == dragInput and dragging then
-            updateInput(input)
-        end
-    end)
-end
 
 SaveManager:SetLibrary(Fluent)
 InterfaceManager:SetLibrary(Fluent)
