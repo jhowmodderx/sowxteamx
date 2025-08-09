@@ -41,7 +41,7 @@ local Tabs = {
         Title = "Settings",
         Icon = "rbxassetid://113400358595552"
     })
-}
+})
 
 local function a()
     local QuestsList = {}
