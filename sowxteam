@@ -1,213 +1,238 @@
-getgenv().SecureMode = true
+-- Ghost Gui UI Library
+loadstring(game:HttpGet('https://raw.githubusercontent.com/GhostPlayer352/UI-Library/refs/heads/main/Ghost%20Gui'))()
+game.CoreGui.GhostGui.MainFrame.Title.Text = "Vox Seas Script SOWxTEAM - Auto Farm"
 
--- UI Rayfield
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
-
-local Window = Rayfield:CreateWindow({
-    Name = "SOWxTEAM | By RodrigoGTyx",
-    LoadingTitle = "SOWxTEAM Loader",
-    LoadingSubtitle = "By RodrigoGTyx",
-    ConfigurationSaving = {
-        Enabled = true,
-        FolderName = "SOWxTEAM",
-        FileName = "Settings"
-    },
-    Discord = {Enabled = false},
-    KeySystem = false,
-})
-
-local MainTab = Window:CreateTab("INÍCIO")
-local SettingsTab = Window:CreateTab("OUTROS")
-
--- Variáveis
-local ESP_ENABLED = false
-local AIMBOT_ENABLED = false
-local TEAM_CHECK = true
-local SPEED_ENABLED = false
-local AIM_SMOOTH = 0.2
-local BOOSTED_SPEED = 52
-local DEFAULT_SPEED = 16
-local AIM_FOV = 200
-local ESPColor = Color3.fromRGB(255, 0, 0)
-
--- Serviços
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
-local LocalPlayer = Players.LocalPlayer
-local Camera = workspace.CurrentCamera
-local mouse = LocalPlayer:GetMouse()
-
--- Funções auxiliares
-local function GetEnemies()
-    local enemies = {}
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            if not TEAM_CHECK or player.Team ~= LocalPlayer.Team then
-                table.insert(enemies, player)
+-- Função AddContent
+AddContent("TextButton", "Auto Farm", [[
+    -- Código para iniciar o Auto Farm
+    _ENV.OnFarm = true
+    task.spawn(function()
+        while task.wait(Settings.dSpeed) and _ENV.OnFarm do
+            -- Lógica de Auto Farm
+            local CurrentQuest = a()
+            if not CurrentQuest then continue end
+            if not ten(CurrentQuest.Target) then
+                ete(CurrentQuest.NpcName, CurrentQuest.Id)
+                continue
             end
-        end
-    end
-    return enemies
-end
-
--- ESP Ultra Leve com Highlight (Chams)
-local function CreateHighlight(player)
-    local highlight = Instance.new("Highlight")
-    highlight.Name = "SOWxESP_" .. player.Name
-    highlight.Adornee = player.Character
-    highlight.FillColor = ESPColor
-    highlight.OutlineColor = Color3.new(0, 0, 0)
-    highlight.FillTransparency = 0.5
-    highlight.OutlineTransparency = 0
-    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-    highlight.Parent = game.CoreGui
-    return highlight
-end
-
-local function RemoveHighlight(player)
-    local highlight = game.CoreGui:FindFirstChild("SOWxESP_" .. player.Name)
-    if highlight then
-        highlight:Destroy()
-    end
-end
-
-local function UpdateESP()
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            if not TEAM_CHECK or player.Team ~= LocalPlayer.Team then
-                if not game.CoreGui:FindFirstChild("SOWxESP_" .. player.Name) then
-                    CreateHighlight(player)
+            local Enemy = clst(CurrentQuest.Target)
+            if not Enemy then continue end
+            CurrentTarget = Enemy
+            local HumanoidRootPart = Enemy:FindFirstChild("HumanoidRootPart")
+            local Humanoid = Enemy:FindFirstChild("Humanoid")
+            if HumanoidRootPart and Humanoid and Humanoid.Health > 0 then
+                -- Se "Bring Mob" estiver ativado, traga o mob para perto
+                if _ENV.BringMob then
+                    brnge(CurrentQuest.Target, HumanoidRootPart.CFrame)
                 end
-            else
-                RemoveHighlight(player)
+                -- Teleporta o jogador para o mob
+                local targetCFrame = HumanoidRootPart.CFrame * CFrame.new(0, 7.5, 0) * CFrame.Angles(math.rad(-90), 0, 0)
+                if not tepe(targetCFrame) then
+                    if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+                        Player.Character.HumanoidRootPart.CFrame = targetCFrame
+                    end
+                end
+                task.wait(0)
+                -- Atacar inimigos da quest
+                local AllQuestEnemies = pgaall(CurrentQuest.Target)
+                if #AllQuestEnemies > 0 then
+                    faz(AllQuestEnemies)
+                end
+                -- Ativa o ataque do personagem
+                d()
             end
-        else
-            RemoveHighlight(player)
         end
-    end
-end
-
-Players.PlayerRemoving:Connect(function(player)
-    RemoveHighlight(player)
-end)
-
-Players.PlayerAdded:Connect(function(player)
-    player.CharacterAdded:Connect(function()
-        task.wait(0.5)
-        UpdateESP()
     end)
+]])
+
+-- Caixa de texto para o Quest
+TextBox = AddContent("TextBox", "Texto do Quest:")
+TextBox:GetPropertyChangedSignal("Text"):Connect(function()
+    print("Texto da Quest: " .. TextBox.Text)
 end)
 
--- Aimbot
-local function GetClosestTarget()
-    local closest, shortest = nil, AIM_FOV
-    for _, player in pairs(GetEnemies()) do
-        local part = player.Character and player.Character:FindFirstChild("Head")
-        if part then
-            local screenPos, visible = Camera:WorldToViewportPoint(part.Position)
-            if visible then
-                local dist = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(mouse.X, mouse.Y)).Magnitude
-                if dist < shortest then
-                    shortest = dist
-                    closest = part
+-- Toggle para AutoStats
+AddContent("Toogle", "Ativar AutoStats", [[
+    -- Ativa a melhoria automática de stats
+    Settings.AutoStats = true
+    while Settings.AutoStats do
+        local remote = ReplicatedStorage.BetweenSides.Remotes.Events.StatsEvent
+        if remote then
+            local args = {
+                "UpgradeStat",
+                {
+                    Strength = Settings.SelectedStat == "Stamina" and 1 or 0,
+                    Defense = Settings.SelectedStat == "Vida" and 1 or 0,
+                    Sword = Settings.SelectedStat == "Espada" and 1 or 0,
+                    Gun = Settings.SelectedStat == "Armas" and 1 or 0,
+                    DevilFruit = Settings.SelectedStat == "Frutas" and 1 or 0
+                }
+            }
+            pcall(function()
+                remote:FireServer(unpack(args))
+            end)
+        end
+        task.wait(0.1)
+    end
+]])
+
+-- Switch para Bring Mob (Quest)
+AddContent("Switch", "Juntar Todos os NPC (Quest)", [[
+    -- Alterna a funcionalidade de trazer o mob para o jogador.
+    _ENV.BringMob = not _ENV.BringMob
+    if _ENV.BringMob then
+        -- Adicione a lógica de trazer o mob
+        brnge(CurrentQuest.Target, Enemy.HumanoidRootPart.CFrame)
+    end
+]])
+
+-- Função para verificar se o jogador está vivo
+local function c(Character)
+    if Character then
+        local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+        return Humanoid and Humanoid.Health > 0
+    end
+end
+
+-- Função para verificar a distância entre o jogador e o inimigo
+local function clst(EnemyName)
+    local AllEnemies = pgaall(EnemyName)
+    if #AllEnemies == 0 then
+        return nil
+    end
+    local ClosestEnemy = nil
+    local ShortestDistance = math.huge
+    for i, Enemy in ipairs(AllEnemies) do
+        if Enemy and Enemy.Parent then
+            local RootPart = Enemy:FindFirstChild("HumanoidRootPart")
+            local Humanoid = Enemy:FindFirstChild("Humanoid")
+            if RootPart and Humanoid and Humanoid.Health > 0 then
+                local Distance = Player:DistanceFromCharacter(RootPart.Position)
+                if Distance < ShortestDistance then
+                    ShortestDistance = Distance
+                    ClosestEnemy = Enemy
                 end
             end
         end
     end
-    return closest
+    return ClosestEnemy
 end
 
--- Speed Hack
-local function UpdateSpeed()
-    local humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-    if humanoid then
-        humanoid.WalkSpeed = SPEED_ENABLED and BOOSTED_SPEED or DEFAULT_SPEED
+-- Função para a lógica de atacar o inimigo
+local function faz(Enemies)
+    local CurrentTime = workspace:GetServerTimeNow()
+    CombatEvent:FireServer("DealDamage", {
+        CallTime = CurrentTime,
+        DelayTime = 0,
+        Combo = 1,
+        Results = Enemies,
+        Damage = math.random(50, 150),
+        CriticalHit = math.random(1, 10) <= 3
+    })
+end
+
+-- Função para teletransportar o jogador
+local function tepe(TargetCFrame)
+    while not Player.Character or not c(Player.Character) do
+        task.wait(1)
+        if not _ENV.OnFarm then
+            return false
+        end
     end
+    if not Player.Character or not Player.Character.PrimaryPart then
+        return false
+    end
+    local Character = Player.Character
+    local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+    local PrimaryPart = Character.PrimaryPart
+    if not Humanoid or not PrimaryPart then
+        return false
+    end
+    local teleportPosition = TargetCFrame.Position
+    local currentPosition = PrimaryPart.Position
+    local Distance = (currentPosition - teleportPosition).Magnitude
+    if Distance < 20 then
+        PrimaryPart.CFrame = TargetCFrame
+        return true
+    end
+    -- Teleportação suave com animação
+    local tween = TweenCreator.new(PrimaryPart, Distance / Settings.TweenSpeed, "CFrame", TargetCFrame)
+    return true
 end
 
-LocalPlayer.CharacterAdded:Connect(function(char)
-    char:WaitForChild("Humanoid")
-    task.wait(0.1)
-    UpdateSpeed()
-end)
+-- Função para ativar ataque com a ferramenta equipada
+local function d()
+    if not c(Player.Character) then
+        return
+    end
+    local Tool = Player.Character:FindFirstChildOfClass("Tool")
+    if not Tool then
+        return
+    end
+    local CurrentTime = workspace:GetServerTimeNow()
+    pcall(function()
+        Tool:Activate()
+        local Handle = Tool:FindFirstChild("Handle")
+        if Handle then
+            if Handle:FindFirstChild("Cooldown") then
+                Handle.Cooldown.Value = 0
+            end
+            if Handle:FindFirstChild("AttackCooldown") then
+                Handle.AttackCooldown.Value = 0
+            end
+            if Handle:FindFirstChild("Debounce") then
+                Handle.Debounce.Value = false
+            end
+            local Sound = Handle:FindFirstChildOfClass("Sound")
+            if Sound then
+                Sound:Play()
+            end
+        end
+        ToolEvent:FireServer("Effects", 1)
+        ToolEvent:FireServer("Activate", 1)
+    end)
+end
 
--- UI - MainTab
-MainTab:CreateToggle({
-    Name = "ESP (Chams)",
-    CurrentValue = false,
-    Callback = function(v)
-        ESP_ENABLED = v
-        if not v then
-            for _, p in ipairs(Players:GetPlayers()) do
-                RemoveHighlight(p)
+-- Função para interagir com a interface de ferramentas
+local ToolDropdown = Tabs.Main:AddDropdown("ToolDropdown", {
+    Title = "Selecione a Ferramenta",
+    Values = {},
+    Multi = false,
+    Default = nil
+})
+
+-- Função para atualizar a lista de ferramentas
+local function RefreshTools()
+    local tools = {}
+    if Player and Player:FindFirstChild("Backpack") then
+        for _, tool in ipairs(Player.Backpack:GetChildren()) do
+            if tool:IsA("Tool") then
+                table.insert(tools, tool.Name)
             end
         end
     end
+    ToolDropdown:SetValues(tools)
+end
+
+-- Botão para atualizar as ferramentas
+local RefreshButton = Tabs.Main:AddButton({
+    Title = "Recarregar Ferramentas",
+    Callback = RefreshTools
 })
 
-MainTab:CreateToggle({
-    Name = "Aimbot (Segurar botão direito)",
-    CurrentValue = false,
-    Callback = function(v) AIMBOT_ENABLED = v end
-})
-
-MainTab:CreateToggle({
-    Name = "Team Check (Desative se o ESP não aparecer)",
-    CurrentValue = true,
-    Callback = function(v) TEAM_CHECK = v end
-})
-
-MainTab:CreateToggle({
-    Name = "Speed Hack",
-    CurrentValue = false,
-    Callback = function(v)
-        SPEED_ENABLED = v
-        UpdateSpeed()
-    end
-})
-
--- UI - SettingsTab
-SettingsTab:CreateSlider({
-    Name = "FOV",
-    Range = {50, 500},
-    Increment = 5,
-    CurrentValue = AIM_FOV,
-    Callback = function(v) AIM_FOV = v end
-})
-
-SettingsTab:CreateSlider({
-    Name = "Smooth",
-    Range = {1, 100},
-    Increment = 1,
-    CurrentValue = AIM_SMOOTH * 100,
-    Callback = function(v) AIM_SMOOTH = v / 100 end
-})
-
-SettingsTab:CreateColorPicker({
-    Name = "ESP Color",
-    Color = ESPColor,
-    Callback = function(v) ESPColor = v
-        for _, obj in ipairs(game.CoreGui:GetChildren()) do
-            if obj:IsA("Highlight") and string.find(obj.Name, "SOWxESP_") then
-                obj.FillColor = v
-            end
-        end
-    end
-})
-
--- Loop Principal
-RunService.Heartbeat:Connect(function()
-    if ESP_ENABLED then
-        UpdateESP()
-    end
-
-    if AIMBOT_ENABLED and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
-        local target = GetClosestTarget()
-        if target then
-            local dir = (target.Position - Camera.CFrame.Position).Unit
-            local newCF = Camera.CFrame:Lerp(CFrame.new(Camera.CFrame.Position, Camera.CFrame.Position + dir), AIM_SMOOTH)
-            Camera.CFrame = newCF
-        end
-    end
+-- Chamada para inicializar a lista de ferramentas
+task.spawn(function()
+    task.wait(2)
+    RefreshTools()
 end)
+
+-- Salvando as configurações
+SaveManager:SetLibrary(Fluent)
+InterfaceManager:SetLibrary(Fluent)
+SaveManager:IgnoreThemeSettings()
+SaveManager:SetIgnoreIndexes({})
+InterfaceManager:BuildInterfaceSection(Tabs.SettingsTab)
+SaveManager:BuildConfigSection(Tabs.SettingsTab)
+
+-- Selecione a primeira guia
+Window:SelectTab(1)
