@@ -546,27 +546,14 @@ local Window = Fluent:CreateWindow({
 })
 
 local Tabs = {
-    Disc = Window:AddTab({
-        Title = "Discod ofc",
-    }),
     Main = Window:AddTab({
-        Title = "Farm e outros",
+        Title = "Farm",
     }),
     Misc = Window:AddTab({
-        Title = "Teleportes",
+        Title = "Outros",
     }),
 }
 
-
-
-Tabs.Disc:AddSection("About We")
-Tabs.Disc:AddButton({
-    Title = "DISCORD HAXSTORE",
-    Description = "Entre para mais novidades",
-    Callback = function()
-        setclipboard("https://discord.gg/MFn7N7vvdN")
-    end
-})
 Tabs.Main:AddSection("Auto Farm")
 Tabs.Main:AddToggle("AutoFarm", {
     Title = "Auto Farm",
@@ -618,13 +605,6 @@ Tabs.Main:AddToggle("AutoFarm", {
                 end
             end)
         end
-    end
-})
-Tabs.Main:AddToggle("BringMob", {
-    Title = "Juntar Npcs",
-    Default = false,
-    Callback = function(Value)
-        _ENV.BringMob = Value
     end
 })
 Tabs.Main:AddSection("Tools")
@@ -810,26 +790,6 @@ Tabs.Misc:AddToggle("FireTouchToggle", {
             for _, v in ipairs(workspace:GetDescendants()) do
                 fireTouch(v)
             end
-        end
-    end
-})
-local isRunning = false
-local function storeFruit()
-    while isRunning do
-        local fruitArgs = {
-            "Guardar Fruta"
-        }
-        game:GetService("ReplicatedStorage"):WaitForChild("BetweenSides"):WaitForChild("Remotes"):WaitForChild("Events"):WaitForChild("ToolsEvent"):FireServer(unpack(fruitArgs))
-        task.wait(0.25)
-    end
-end
-Tabs.Misc:AddToggle("AutoStoreToggle", {
-    Title = "Guardar Frutas Automaticamente",
-    Default = false,
-    Callback = function(value)
-        isRunning = value
-        if value then
-            coroutine.wrap(storeFruit)()
         end
     end
 })
