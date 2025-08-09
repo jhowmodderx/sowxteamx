@@ -1,3 +1,49 @@
+-- Adicione estas linhas no início do seu script, antes de qualquer uso das variáveis globais
+local game = game
+local workspace = workspace
+local tick = tick or os.clock
+local task = task or {}
+local TweenInfo = TweenInfo or function(time, easingStyle)
+    return {
+        Time = time,
+        EasingStyle = easingStyle or Enum.EasingStyle.Linear
+    }
+end
+local Instance = Instance
+local Vector3 = Vector3
+
+-- Se Vector3 não estiver definido, crie uma função simulada
+if not Vector3 then
+    Vector3 = {
+        new = function(x, y, z) return {X = x, Y = y, Z = z} end,
+        zero = {X = 0, Y = 0, Z = 0},
+        one = {X = 1, Y = 1, Z = 1}
+    }
+end
+
+-- Se TweenInfo não estiver disponível, crie uma implementação básica
+if not TweenInfo then
+    TweenInfo = function(time, easingStyle)
+        return {
+            Time = time,
+            EasingStyle = easingStyle or Enum.EasingStyle.Linear
+        }
+    end
+end
+
+-- Se task não estiver disponível, crie funções básicas
+if not task then
+    task = {
+        wait = function(seconds)
+            local start = tick()
+            while tick() - start < seconds do end
+        end,
+        spawn = function(f)
+            coroutine.resume(coroutine.create(f))
+        end
+    }
+end
+
 
 -- Versão adaptada para MoonSec V3 (usa getgenv/getrenv/getfenv em vez de _ENV direto)
 local get_env = (getgenv or getrenv or getfenv)
@@ -8,7 +54,6 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
-
 -- Player (aguarda se necessário)
 local Player = Players.LocalPlayer or Players.PlayerAdded:Wait()
 
