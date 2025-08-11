@@ -512,23 +512,11 @@ local function ete(QuestName, QuestId)
     end
 end
 
-
-
-
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/jhowmodderxxxx/haxstore/refs/heads/main/savemanagerhax"))()
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/jhowmodderxxxx/haxstore/refs/heads/main/interface"))()
 
 local DeviceType = game:GetService("UserInputService").TouchEnabled and "Mobile" or "PC"
-
-
---<>----<>----<>----< Anti Afk >----<>----<>----<>--
-game.Players.LocalPlayer.Idled:Connect(function()
-    VirtualUser:CaptureController()
-    VirtualUser:ClickButton2(Vector2.new())
-    print("Roblox Tried to kick you but we didn't let them kick you :D")
-end)
-warn("[Anti Afk] - loaded successfully") 
 
 
 local UserInputService = game:GetService("UserInputService")
@@ -662,7 +650,7 @@ end)
 
 local Window = Fluent:CreateWindow({
     Title = "SOWxTEAM",
-    SubTitle = "By RodrigoGTyx",
+    SubTitle = "By RodrigoGTyx | VOX SEAS | SCRIPT ATUALIZADO DIA 10/08/25",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
     Acrylic = false,
@@ -670,18 +658,47 @@ local Window = Fluent:CreateWindow({
     MinimizeKey = Enum.KeyCode.LeftAlt
 })
 
-local Tabs = {
-    Main = Window:AddTab({
-        Title = "Farm",
-    }),
-    Misc = Window:AddTab({
-        Title = "Outros",
-    }),
-    Server = Window:AddTab({
-        Title = "Server",
-        }),
-}
+        local Tabs = {
+            Main = Window:AddTab({
+                Title = "Farm",
+            
 
+            }),
+            Misc = Window:AddTab({
+                Title = "Outros",
+         
+            }),
+            Server = Window:AddTab({
+                Title = "Server",
+            
+                }),
+
+                discord = Window:AddTab({
+                Title = "Discord",
+        
+                }),
+        }
+
+
+        -- Variável de altura ajustável
+local FarmHeight = 7.5
+
+-- Slider para ajustar altura do farm
+Tabs.Main:AddSlider("FarmHeightSlider", {
+    Title = "Altura do Player (Farm)",
+    Description = "Ajusta a altura acima do inimigo durante o farm",
+    Default = 7.5,
+    Min = 0,
+    Max = 20,
+    Rounding = 1,
+    Callback = function(Value)
+        FarmHeight = Value
+    end
+})
+
+
+
+-- Sistema Auto Farm (modificado para usar a altura dinâmica)
 Tabs.Main:AddSection("Auto Farm")
 Tabs.Main:AddToggle("AutoFarm", {
     Title = "Auto Farm",
@@ -692,24 +709,18 @@ Tabs.Main:AddToggle("AutoFarm", {
             task.spawn(function()
                 while task.wait(Settings.dSpeed) and _ENV.OnFarm do
                     if not c(Player.Character) then
-                        repeat
-                            task.wait(0.5)
-                        until c(Player.Character)
+                        repeat task.wait(0.5) until c(Player.Character)
                         task.wait(0.2)
                         continue
                     end
                     local CurrentQuest = a()
-                    if not CurrentQuest then
-                        continue
-                    end
+                    if not CurrentQuest then continue end
                     if not ten(CurrentQuest.Target) then
                         ete(CurrentQuest.NpcName, CurrentQuest.Id)
                         continue
                     end
                     local Enemy = clst(CurrentQuest.Target)
-                    if not Enemy then
-                        continue
-                    end
+                    if not Enemy then continue end
                     CurrentTarget = Enemy
                     local HumanoidRootPart = Enemy:FindFirstChild("HumanoidRootPart")
                     local Humanoid = Enemy:FindFirstChild("Humanoid")
@@ -717,7 +728,7 @@ Tabs.Main:AddToggle("AutoFarm", {
                         if _ENV.BringMob then
                             brnge(CurrentQuest.Target, HumanoidRootPart.CFrame)
                         end
-                        local targetCFrame = HumanoidRootPart.CFrame * CFrame.new(0, 7.5, 0) * CFrameAngle
+                        local targetCFrame = HumanoidRootPart.CFrame * CFrame.new(0, FarmHeight, 0) * CFrameAngle
                         if not tepe(targetCFrame) then
                             if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
                                 Player.Character.HumanoidRootPart.CFrame = targetCFrame
@@ -725,7 +736,7 @@ Tabs.Main:AddToggle("AutoFarm", {
                         end
                         task.wait(0)
                         local AllQuestEnemies = pgaall(CurrentQuest.Target)
-                        if # AllQuestEnemies > 0 then
+                        if #AllQuestEnemies > 0 then
                             faz(AllQuestEnemies)
                         end
                         d()
@@ -736,6 +747,7 @@ Tabs.Main:AddToggle("AutoFarm", {
     end
 })
 
+
 Tabs.Main:AddToggle("BringMob", {
     Title = "Bring Mob",
     Default = false,
@@ -743,6 +755,96 @@ Tabs.Main:AddToggle("BringMob", {
         _ENV.BringMob = Value
     end
 })
+
+
+
+
+
+local HttpService = game:GetService("HttpService")
+local SetClipboard = setclipboard or toclipboard -- função universal
+
+-- Função de cópia de URL
+local function copiarURL(url)
+    if SetClipboard then
+        SetClipboard(url)
+    end
+    -- Notificação usando Fluent
+    Fluent:Notify({
+        Title = "Copiado!",
+        Content = "O link foi copiado para a área de transferência.",
+        Duration = 3 -- segundos
+    })
+end
+
+-- Exemplo de botão
+Tabs.discord:AddButton({
+    Title = "Pegar Link do Discord",
+    Callback = function()
+        copiarURL("https://discord.gg/MFn7N7vvdN")
+    end
+})
+
+
+-- // Serviços
+local Players = game:GetService("Players")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local LocalPlayer = Players.LocalPlayer
+
+-- // Lista de teclas
+local skillKeys = { "Z", "X", "V", "B", "E", "C" }
+
+-- // Tabela de configurações
+local selectedKeys = {}
+local autoSkillsEnabled = false
+
+-- // Seção no Fluent UI
+local section = Tabs.Main:AddSection("Auto Skills")
+
+-- Dropdown para cada tecla
+for _, key in ipairs(skillKeys) do
+    section:AddDropdown(key.."Dropdown", {
+        Title = "Ativar tecla "..key,
+        Values = { "Sim", "Não" },
+        Multi = false,
+        Default = "Não",
+        Callback = function(value)
+            selectedKeys[key] = (value == "Sim")
+        end
+    })
+end
+
+-- Toggle principal
+section:AddToggle("AutoSkillsToggle", {
+    Title = "Ativar Auto Skills",
+    Default = false,
+    Callback = function(value)
+        autoSkillsEnabled = value
+    end
+})
+
+-- Loop para pressionar teclas
+task.spawn(function()
+    while task.wait(0.1) do
+        if autoSkillsEnabled then
+            for _, key in ipairs(skillKeys) do
+                if selectedKeys[key] then
+                    VirtualInputManager:SendKeyEvent(true, key, false, game)
+                    task.wait(0.05)
+                    VirtualInputManager:SendKeyEvent(false, key, false, game)
+                end
+            end
+        end
+    end
+end)
+
+
+
+  Fluent:Notify({
+        Title = "Aviso!!!",
+        Content = "Caso tenha bugs entre em nosso discord e reporte o bug la!!",
+        Duration = 10 -- Set to nil to make the notification not disappear
+    })
+
 
 Tabs.Main:AddSection("Config")
 local ToolDropdown = Tabs.Main:AddDropdown("ToolDropdown", {
@@ -1271,95 +1373,6 @@ Tabs.Server:AddToggle("Auto Hop Server", {
         else
             -- Desativa o auto hop
             _ENV.AutoHopEnabled = false
-        end
-    end
-})
-
-
-
-
--- Adiciona a seção de Auto Skills
-Tabs.Main:AddSection("Auto Skills")
-
--- Cria o dropdown para seleção de teclas
-local skillKeysDropdown = Tabs.Main:AddDropdown("SkillKeysDropdown", {
-    Title = "Selecionar Teclas para Auto Skills",
-    Values = {"Z", "X", "C", "V", "B"},
-    Multi = true,
-    Default = {"Z", "X"},
-    Callback = function(selectedKeys)
-        _ENV.SelectedSkillKeys = selectedKeys
-    end
-})
-
--- Toggle para ativar/desativar o Auto Skills
-Tabs.Main:AddToggle("AutoSkillsToggle", {
-    Title = "Ativar Auto Skills",
-    Default = false,
-    Callback = function(value)
-        _ENV.AutoSkillsEnabled = value
-        
-        if value then
-            -- Função otimizada para pressionar as teclas
-            local function pressSelectedKeys()
-                local selectedKeys = _ENV.SelectedSkillKeys or {"Z", "X"}
-                local virtualInput = game:GetService("VirtualInputManager")
-                local keyPriority = {
-                    Z = 1,
-                    X = 2,
-                    C = 3,
-                    V = 4,
-                    B = 5
-                }
-                
-                -- Ordena as teclas por prioridade
-                table.sort(selectedKeys, function(a, b)
-                    return keyPriority[a] < keyPriority[b]
-                end)
-                
-                -- Pressão mais robusta das teclas
-                for _, key in ipairs(selectedKeys) do
-                    local keyCode = Enum.KeyCode[key]
-                    
-                    -- Pressão mais longa para teclas C, V, B
-                    local pressDuration = (key == "C" or key == "V" or key == "B") and 0.15 or 0.1
-                    
-                    virtualInput:SendKeyEvent(true, keyCode, false, nil)
-                    task.wait(pressDuration)
-                    virtualInput:SendKeyEvent(false, keyCode, false, nil)
-                    
-                    -- Intervalo maior após teclas especiais
-                    local waitTime = (key == "C" or key == "V" or key == "B") and 0.3 or 0.2
-                    task.wait(waitTime)
-                end
-            end
-            
-            -- Sistema de verificação de skills
-            local function skillsAvailable()
-                -- Verifica PC
-                local pcFrame = Player.PlayerGui:FindFirstChild("MainUI")
-                pcFrame = pcFrame and pcFrame:FindFirstChild("SkillsFrame")
-                
-                -- Verifica Mobile
-                local mobileFrame = Player.PlayerGui:FindFirstChild("MobileGui")
-                mobileFrame = mobileFrame and mobileFrame:FindFirstChild("SkillsFrameMobile")
-                
-                return (pcFrame and pcFrame.Visible) or (mobileFrame and mobileFrame.Visible)
-            end
-            
-            -- Loop principal otimizado
-            spawn(function()
-                while _ENV.AutoSkillsEnabled do
-                    if skillsAvailable() then
-                        -- Executa 2 ciclos rápidos para garantir ativação
-                        for i = 1, 2 do
-                            pressSelectedKeys()
-                            task.wait(0.1)
-                        end
-                    end
-                    task.wait(0.4) -- Intervalo entre ciclos
-                end
-            end)
         end
     end
 })
