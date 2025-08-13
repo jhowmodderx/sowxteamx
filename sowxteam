@@ -785,7 +785,11 @@ local BossList = {
     ["Ice King"] = function() return workspace.Playability.Enemys["Frost Island"]:FindFirstChild("Ice King53") end,
     ["Pharaoh"] = function() return workspace.Playability.Enemys["Sandstorm Island"]:FindFirstChild("Pharaoh93") end,
     ["Admiral Vulkran"] = function() return workspace.Playability.Enemys["Vulcan Island"]:FindFirstChild("Admiral Vulkran169") end,
-    ["Valion Ironmaul"] = function() return workspace.Playability.Enemys.Prison:FindFirstChild("Valion Ironmaul83") end
+    ["Valion Ironmaul"] = function() return workspace.Playability.Enemys.Prison:FindFirstChild("Valion Ironmaul83") end,
+    ["Thunder God"] = function() return workspace.Playability.Enemys["Skypie Upper"]["Thunder God156"] end,
+    ["Wysper"] = function() return workspace.Playability.Enemys["Skypie Upper"].Wysper131 end,
+    ["Abandoned Experiment"] = function() return workspace.Playability.Enemys.Fountain["Abandoned Experiment20"] end,
+    ["EX-77 Ironfist"] = function() return workspace.Playability.Enemys.Fountain["EX-77 Ironfist19"] end
 }
 
 local SelectedBoss = nil
@@ -794,7 +798,7 @@ local SelectedBoss = nil
 Tabs.Main:AddSection("Auto Farm Boss")
 Tabs.Main:AddDropdown("BossDropdown", {
     Title = "Selecionar Boss",
-    Values = {"Muzzlejaw", "Koaby", "King Werewolf", "Ice King", "Pharaoh", "Admiral Vulkran", "Valion Ironmaul"},
+    Values = {"Muzzlejaw", "Koaby", "King Werewolf", "Ice King", "Pharaoh", "Admiral Vulkran", "Valion Ironmaul", "Thunder God", "Wysper", "Abandoned Experiment", "EX-77 Ironfist"},
     Default = nil,
     Callback = function(Value)
         SelectedBoss = Value
