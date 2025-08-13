@@ -226,42 +226,61 @@ end
 local lastCFrame = nil
 local lastTeleport = 0
 
--- Função de Teleporte com correção para movimentação após o teleporte
 local function tepe(TargetCFrame)
-    -- Verifica se o jogador e a parte principal estão disponíveis
-    local Player = game.Players.LocalPlayer
-    local Character = Player.Character
-    if not Character or not Character.PrimaryPart then
+    while not Player.Character or not c(Player.Character) do
+        task.wait(1)
+        if not _ENV.OnFarm then
+            return false
+        end
+    end
+    if not Player.Character or not Player.Character.PrimaryPart then
         return false
     end
-
-    -- Evita teletransportes repetidos de forma rápida
     if (tick() - lastTeleport) <= 0.3 and lastCFrame == TargetCFrame then
         return false
     end
-
-    -- Atualiza os valores de teleporte
+    local Character = Player.Character
+    local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+    local PrimaryPart = Character.PrimaryPart
+    if not Humanoid or not PrimaryPart then
+        return false
+    end
+    if Humanoid.Sit then
+        Humanoid.Sit = false
+        task.wait(0.1)
+        return false
+    end
     lastTeleport = tick()
     lastCFrame = TargetCFrame
-
-    -- Teleportando o personagem para o destino
-    local HumanoidRootPart = Character:FindFirstChild("HumanoidRootPart")
-    if HumanoidRootPart then
-        -- Desativando colisão temporária para evitar problemas após o teleporte
-        HumanoidRootPart.CanCollide = false
-
-        -- Teleportando o personagem
-        HumanoidRootPart.CFrame = TargetCFrame
-
-        -- Espera um pouco para garantir que o teleporte foi realizado
-        task.wait(0.1)
-
-        -- Reativando colisão após o teleporte
-        HumanoidRootPart.CanCollide = true
+    _ENV.OnFarm = true
+    local teleportPosition = TargetCFrame.Position
+    local currentPosition = PrimaryPart.Position
+    local Distance = (currentPosition - teleportPosition).Magnitude
+    if Distance < 20 then
+        PrimaryPart.CFrame = TargetCFrame
+        TweenCreator:stopTween(PrimaryPart)
         return true
     end
-
-    return false
+    TweenCreator:stopTween(PrimaryPart)
+    local tween = TweenCreator.new(PrimaryPart, Distance / Settings.TweenSpeed, "CFrame", TargetCFrame)
+    local connection
+    connection = RunService.Heartbeat:Connect(function()
+        if not c(Character) or not _ENV.OnFarm then
+            TweenCreator:stopTween(PrimaryPart)
+            if connection then
+                connection:Disconnect()
+            end
+        end
+    end)
+    coroutine.wrap(function()
+        while tween.tween.PlaybackState == Enum.PlaybackState.Playing do
+            task.wait()
+        end
+        if connection then
+            connection:Disconnect()
+        end
+    end)()
+    return true
 end
 
 table.insert(conepc, BodyVelocity:GetPropertyChangedSignal("Parent"):Connect(TweenStopped))
@@ -1056,6 +1075,7 @@ local function fireTouch(part)
     end
 end
 Tabs.Misc:AddSection("Teleportes")
+
 local islands = {}
 local map = workspace:FindFirstChild("Map")
 if map then
@@ -1065,12 +1085,14 @@ if map then
         end
     end
 end
+
 local IslandDropdown = Tabs.Misc:AddDropdown("IslandDropdown", {
     Title = "Selecione a Ilha",
     Values = islands,
     Multi = false,
     Default = islands[1] or nil
 })
+
 Tabs.Misc:AddButton({
     Title = "Ir Para Ilha",
     Callback = function()
@@ -1079,15 +1101,21 @@ Tabs.Misc:AddButton({
             local island = map:FindFirstChild(selectedIsland)
             if island and island:FindFirstChild("Base") then
                 local base = island.Base
+                local targetPos
+
                 if base:FindFirstChild("HumanoidRootPart") then
-                    game.Players.LocalPlayer.Character:MoveTo(base.HumanoidRootPart.Position)
+                    targetPos = base.HumanoidRootPart.Position
                 else
-                    game.Players.LocalPlayer.Character:MoveTo(base.WorldPivot.Position + Vector3.new(0, 5, 0))
+                    targetPos = base.WorldPivot.Position + Vector3.new(0, 5, 0)
                 end
+
+                -- Usa a função 'tepe' ao invés de MoveTo
+                tepe(targetPos)
             end
         end
     end
 })
+
 
 Tabs.Misc:AddSection("Farm Baú")
 Tabs.Misc:AddToggle("FireTouchToggle", {
