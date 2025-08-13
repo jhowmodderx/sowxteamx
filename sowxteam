@@ -223,46 +223,44 @@ local function TweenStopped()
     end
 end
 
-local lastCFrame = nil
-local lastTeleport = 0
+local TweenService = game:GetService("TweenService")
+local Player = game.Players.LocalPlayer
 
--- Função de Teleporte com correção para movimentação após o teleporte
+-- Teleporte suave anti-reset
 local function tepe(TargetCFrame)
-    -- Verifica se o jogador e a parte principal estão disponíveis
-    local Player = game.Players.LocalPlayer
     local Character = Player.Character
-    if not Character or not Character.PrimaryPart then
-        return false
+    local HRP = Character and Character:FindFirstChild("HumanoidRootPart")
+    if not HRP then return false end
+
+    -- Distância total
+    local distancia = (TargetCFrame.Position - HRP.Position).Magnitude
+    
+    -- Se muito longe, vai em passos
+    if distancia > 50 then
+        local passos = math.ceil(distancia / 40) -- cada passo até ~40 studs
+        local posAtual = HRP.CFrame
+
+        for i = 1, passos do
+            local novaPos = posAtual.Position + ((TargetCFrame.Position - posAtual.Position) / (passos - i + 1))
+            local tween = TweenService:Create(
+                HRP,
+                TweenInfo.new(0.15, Enum.EasingStyle.Linear),
+                {CFrame = CFrame.new(novaPos)}
+            )
+            tween:Play()
+            tween.Completed:Wait()
+            posAtual = HRP.CFrame
+            task.wait(0.05) -- pequeno delay pra parecer movimento natural
+        end
+    else
+        -- Pequeno deslocamento, pode ser direto
+        HRP.CFrame = TargetCFrame
     end
-
-    -- Evita teletransportes repetidos de forma rápida
-    if (tick() - lastTeleport) <= 0.3 and lastCFrame == TargetCFrame then
-        return false
-    end
-
-    -- Atualiza os valores de teleporte
-    lastTeleport = tick()
-    lastCFrame = TargetCFrame
-
-    -- Teleportando o personagem para o destino
-    local HumanoidRootPart = Character:FindFirstChild("HumanoidRootPart")
-    if HumanoidRootPart then
-        -- Desativando colisão temporária para evitar problemas após o teleporte
-        HumanoidRootPart.CanCollide = false
-
-        -- Teleportando o personagem
-        HumanoidRootPart.CFrame = TargetCFrame
-
-        -- Espera um pouco para garantir que o teleporte foi realizado
-        task.wait(0.1)
-
-        -- Reativando colisão após o teleporte
-        HumanoidRootPart.CanCollide = true
-        return true
-    end
-
-    return false
+    
+    return true
 end
+
+
 
 table.insert(conepc, BodyVelocity:GetPropertyChangedSignal("Parent"):Connect(TweenStopped))
 
@@ -650,7 +648,7 @@ end)
 
 local Window = Fluent:CreateWindow({
     Title = "SOWxTEAM",
-    SubTitle = "By RodrigoGTyx | VOX SEAS | SCRIPT ATUALIZADO DIA 10/08/25",
+    SubTitle = "By RodrigoGTyx | VOX SEAS | SCRIPT ATUALIZADO DIA 13/08/25",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
     Acrylic = false,
@@ -753,6 +751,76 @@ Tabs.Main:AddToggle("BringMob", {
     Default = false,
     Callback = function(Value)
         _ENV.BringMob = Value
+    end
+})
+
+
+-- Lista de Bosses (caminho salvo como função para checar dinamicamente)
+local BossList = {
+    ["Muzzlejaw"] = function() return workspace.Playability.Enemys.Prison:FindFirstChild("Muzzlejaw81") end,
+    ["Koaby"] = function() return workspace.Playability.Enemys.Prison:FindFirstChild("Koaby80") end,
+    ["King Werewolf"] = function() return workspace.Playability.Enemys["Werewolf's Island"]:FindFirstChild("King Werewolf170") end,
+    ["Ice King"] = function() return workspace.Playability.Enemys["Frost Island"]:FindFirstChild("Ice King53") end,
+    ["Pharaoh"] = function() return workspace.Playability.Enemys["Sandstorm Island"]:FindFirstChild("Pharaoh93") end,
+    ["Admiral Vulkran"] = function() return workspace.Playability.Enemys["Vulcan Island"]:FindFirstChild("Admiral Vulkran169") end,
+    ["Valion Ironmaul"] = function() return workspace.Playability.Enemys.Prison:FindFirstChild("Valion Ironmaul83") end
+}
+
+local SelectedBoss = nil
+
+-- Dropdown para escolher Boss
+Tabs.Main:AddSection("Auto Farm Boss")
+Tabs.Main:AddDropdown("BossDropdown", {
+    Title = "Selecionar Boss",
+    Values = {"Muzzlejaw", "Koaby", "King Werewolf", "Ice King", "Pharaoh", "Admiral Vulkran", "Valion Ironmaul"},
+    Default = nil,
+    Callback = function(Value)
+        SelectedBoss = Value
+    end
+})
+
+-- Toggle Auto Farm Boss
+
+Tabs.Main:AddToggle("AutoFarmBoss", {
+    Title = "Auto Farm Boss",
+    Default = false,
+    Callback = function(Value)
+        _ENV.OnFarmBoss = Value
+        if Value then
+            task.spawn(function()
+                while task.wait(Settings.dSpeed) and _ENV.OnFarmBoss do
+                    if not SelectedBoss or not BossList[SelectedBoss] then
+                        continue
+                    end
+
+                    -- Checa se o boss está spawnado
+                    local Enemy = BossList[SelectedBoss]()
+                    if not Enemy or not Enemy:FindFirstChild("Humanoid") or not Enemy:FindFirstChild("HumanoidRootPart") then
+                        continue
+                    end
+
+                    local Humanoid = Enemy.Humanoid
+                    local HumanoidRootPart = Enemy.HumanoidRootPart
+
+                    -- Só farma se o boss tiver vida
+                    if Humanoid.Health > 0 then
+                        if _ENV.BringMob then
+                            brnge(Enemy.Name, HumanoidRootPart.CFrame)
+                        end
+
+                        local targetCFrame = HumanoidRootPart.CFrame * CFrame.new(0, FarmHeight, 0) * CFrameAngle
+                        if not tepe(targetCFrame) then
+                            if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+                                Player.Character.HumanoidRootPart.CFrame = targetCFrame
+                            end
+                        end
+
+                        faz({Enemy})
+                        d()
+                    end
+                end
+            end)
+        end
     end
 })
 
@@ -1033,295 +1101,108 @@ Tabs.Misc:AddToggle("FireTouchToggle", {
     end
 })
 
-local function clicarParaFalarComNPC()
-    local FruitDealer = workspace.IgnoreList.Int.NPCs.Shops["Foosha Village"]["Fruit Dealer (Foosha Village)"]
-    if FruitDealer and FruitDealer.PrimaryPart then
-        -- Verifica a posição do NPC
-        local npcPosition = FruitDealer.PrimaryPart.Position
+-- Tabela com todos os NPCs e suas informações
+local NPCs = {
+    ["Vendedor de Frutas"] = {
+        path = workspace.IgnoreList.Int.NPCs.Shops["Foosha Village"]["Fruit Dealer (Foosha Village)"],
+        npcName = "Fruit Dealer (Foosha Village)"
+    },
+    ["Vendedor de Haki de Armamento"] = {
+        path = workspace.IgnoreList.Int.NPCs.Shops["Frost Island"]["Aura Teacher"],
+        npcName = "Aura Teacher"
+    },
+    ["Vendedor do DarkStep"] = {
+        path = workspace.IgnoreList.Int.NPCs.Shops["Orange Town"]["Dark Step Teacher"],
+        npcName = "Dark Step Teacher"
+    },
+    ["Vendedor do Water Kung-Fu"] = {
+        path = workspace.IgnoreList.Int.NPCs.Shops["Sharkman Park"]["Water Kung-Fu Teacher"],
+        npcName = "Water Kung-Fu Teacher"
+    },
+    ["Vendedor do Estilo Electric"] = {
+        path = workspace.IgnoreList.Int.NPCs.Shops["Skypie Upper"]["Eletric Teacher"],
+        npcName = "Eletric Teacher"
+    },
+    ["Vendedor do Haki da Visão"] = {
+        path = workspace.IgnoreList.Int.NPCs.Shops["Skypie Upper"]["Instinct Teacher"],
+        npcName = "Instinct Teacher"
+    },
+    ["Sword Dealer (Foosha Village)"] = {
+    path = workspace.IgnoreList.Int.NPCs.Shops["Foosha Village"]["Sword Dealer (Foosha Village)"],
+    npcName = "Sword Dealer (Foosha Village)"
+},
+["Rare Sword Dealer"] = {
+    path = workspace.IgnoreList.Int.NPCs.Shops["Orange Town"]["Rare Sword Dealer"],
+    npcName = "Rare Sword Dealer"
+},
+["Master Sword Dealer"] = {
+    path = workspace.IgnoreList.Int.NPCs.Shops["Skypie Down"]["Master Sword Dealer"],
+    npcName = "Master Sword Dealer"
+}
+
+}
+
+-- Função universal para teleportar e interagir com NPCs
+local function teleportarParaNPC(npcData)
+    local NPC = npcData.path
+    if NPC and NPC.PrimaryPart then
+        local npcPosition = NPC.PrimaryPart.Position
         local player = game.Players.LocalPlayer
         local character = player.Character
 
-        -- Caso o jogador esteja distante do NPC, teleporta o jogador até o NPC
+        -- Teleporta se estiver longe
         if character and character:FindFirstChild("HumanoidRootPart") then
             local distance = (npcPosition - character.HumanoidRootPart.Position).Magnitude
             if distance > 10 then
-                -- Teleporta o jogador para perto do NPC, para garantir que a interação funcione
-                local targetCFrame = FruitDealer.PrimaryPart.CFrame * CFrame.new(0, 0, 3)
+                local targetCFrame = NPC.PrimaryPart.CFrame * CFrame.new(0, 0, 3)
                 tepe(targetCFrame)
-                task.wait(2) -- Espera um pouco para garantir que o jogador tenha chego
+                task.wait(2)
             end
         end
 
-        -- Agora vamos simular um clique na posição do NPC
+        -- Interage com o NPC
         local success, result = pcall(function()
             DialogueEvent:FireServer("TalkToNpc", {
-                ["NpcName"] = "Fruit Dealer (Foosha Village)"
+                ["NpcName"] = npcData.npcName
             })
         end)
 
         if success then
-            print("Interação com o NPC foi iniciada!")
+            print("Interação com " .. npcData.npcName .. " foi iniciada!")
         else
-            warn("Falha ao tentar interagir com o NPC.")
+            warn("Falha ao tentar interagir com " .. npcData.npcName)
         end
     else
-        warn("Fruit Dealer não encontrado!")
+        warn(npcData.npcName .. " não encontrado!")
     end
 end
 
-
-
-Tabs.Misc:AddSection("Vendedor de Frutas")
-Tabs.Misc:AddToggle("Vendedor de Frutas", {
-    Title = "Ir Ate o Vendedor de Fruta",
-    Default = false,
+-- Criando o dropdown
+Tabs.Misc:AddSection("Teleporte para NPCs")
+Tabs.Misc:AddDropdown("NPCDropdown", {
+    Title = "Selecione um NPC",
+    Values = {
+        "Vendedor de Frutas",
+        "Vendedor de Haki de Armamento",
+        "Vendedor do DarkStep",
+        "Vendedor do Water Kung-Fu",
+        "Vendedor do Estilo Electric",
+        "Vendedor do Haki da Visão",
+        "Sword Dealer (Foosha Village)",
+        "Rare Sword Dealer",
+        "Master Sword Dealer"
+    },
+    Multi = false,
+    Default = 1,
     Callback = function(Value)
-        if Value then
-            -- Se o toggle estiver ativado, tenta interagir com o NPC
-            clicarParaFalarComNPC()
+        local npcData = NPCs[Value]
+        if npcData then
+            teleportarParaNPC(npcData)
         else
-            -- Caso contrário, nada acontece (opcional)
-            print("Interação com NPC desativada.")
+            warn("NPC não encontrado na lista!")
         end
     end
 })
-
-
--- Função para interagir automaticamente com o NPC "Aura Teacher"
-local function clicarParaFalarComAuraTeacher()
-    local AuraTeacher = workspace.IgnoreList.Int.NPCs.Shops["Frost Island"]["Aura Teacher"]
-    if AuraTeacher and AuraTeacher.PrimaryPart then
-        -- Verifica a posição do NPC
-        local npcPosition = AuraTeacher.PrimaryPart.Position
-        local player = game.Players.LocalPlayer
-        local character = player.Character
-
-        -- Caso o jogador esteja distante do NPC, teleporta o jogador até o NPC
-        if character and character:FindFirstChild("HumanoidRootPart") then
-            local distance = (npcPosition - character.HumanoidRootPart.Position).Magnitude
-            if distance > 10 then
-                -- Teleporta o jogador para perto do NPC, para garantir que a interação funcione
-                local targetCFrame = AuraTeacher.PrimaryPart.CFrame * CFrame.new(0, 0, 3)
-                tepe(targetCFrame)
-                task.wait(2) -- Espera um pouco para garantir que o jogador tenha chegado
-            end
-        end
-
-        -- Agora vamos simular um clique na posição do NPC
-        local success, result = pcall(function()
-            DialogueEvent:FireServer("TalkToNpc", {
-                ["NpcName"] = "Aura Teacher"
-            })
-        end)
-
-        if success then
-            print("Interação com o Aura Teacher foi iniciada!")
-        else
-            warn("Falha ao tentar interagir com o Aura Teacher.")
-        end
-    else
-        warn("Aura Teacher não encontrado!")
-    end
-end
-
--- Adicionando o Toggle para a interação automática com o NPC "Aura Teacher"
-Tabs.Misc:AddSection("Vendedor de Haki de Armamento")
-Tabs.Misc:AddToggle("TP  Vendedor de Haki de Armamento", {
-    Title = "TP  Vendedor de Haki de Armamento",
-    Default = false,
-    Callback = function(Value)
-        if Value then
-            -- Se o toggle estiver ativado, tenta interagir com o NPC
-            clicarParaFalarComAuraTeacher()
-        else
-            -- Caso contrário, nada acontece (opcional)
-            print("Interação com o Aura Teacher desativada.")
-        end
-    end
-})
-
--- Função para interagir automaticamente com o NPC "Dark Step Teacher"
-local function clicarParaFalarComDarkStepTeacher()
-    local DarkStepTeacher = workspace.IgnoreList.Int.NPCs.Shops["Orange Town"]["Dark Step Teacher"]
-    if DarkStepTeacher and DarkStepTeacher.PrimaryPart then
-        -- Verifica a posição do NPC
-        local npcPosition = DarkStepTeacher.PrimaryPart.Position
-        local player = game.Players.LocalPlayer
-        local character = player.Character
-
-        -- Caso o jogador esteja distante do NPC, teleporta o jogador até o NPC
-        if character and character:FindFirstChild("HumanoidRootPart") then
-            local distance = (npcPosition - character.HumanoidRootPart.Position).Magnitude
-            if distance > 10 then
-                -- Teleporta o jogador para perto do NPC, para garantir que a interação funcione
-                local targetCFrame = DarkStepTeacher.PrimaryPart.CFrame * CFrame.new(0, 0, 3)
-                tepe(targetCFrame)
-                task.wait(2) -- Espera um pouco para garantir que o jogador tenha chegado
-            end
-        end
-
-        -- Agora vamos simular um clique na posição do NPC
-        local success, result = pcall(function()
-            DialogueEvent:FireServer("TalkToNpc", {
-                ["NpcName"] = "Dark Step Teacher"
-            })
-        end)
-
-        if success then
-            print("Interação com o Dark Step Teacher foi iniciada!")
-        else
-            warn("Falha ao tentar interagir com o Dark Step Teacher.")
-        end
-    else
-        warn("Dark Step Teacher não encontrado!")
-    end
-end
-
--- Adicionando o Toggle para a interação automática com o NPC "Dark Step Teacher"
-Tabs.Misc:AddSection("Vendedor do DarkStep")
-Tabs.Misc:AddToggle("TP Vendedor do DarkStep", {
-    Title = "TP Vendedor do DarkStep",
-    Default = false,
-    Callback = function(Value)
-        if Value then
-            -- Se o toggle estiver ativado, tenta interagir com o NPC
-            clicarParaFalarComDarkStepTeacher()
-        else
-            -- Caso contrário, nada acontece (opcional)
-            print("Interação com o Dark Step Teacher desativada.")
-        end
-    end
-})
-
--- Função de teleporte
-local function tepe(TargetCFrame)
-    local Player = game.Players.LocalPlayer
-    local Character = Player.Character
-    if not Character or not Character.PrimaryPart then return false end
-    if (tick() - lastTeleport) <= 0.3 and lastCFrame == TargetCFrame then return false end
-
-    lastTeleport = tick()
-    lastCFrame = TargetCFrame
-
-    local HumanoidRootPart = Character:FindFirstChild("HumanoidRootPart")
-    if HumanoidRootPart then
-        HumanoidRootPart.CanCollide = false
-        HumanoidRootPart.CFrame = TargetCFrame
-        task.wait(0.1)
-        HumanoidRootPart.CanCollide = true
-        return true
-    end
-
-    return false
-end
-
--- Função de interação com o NPC "Water Kung-Fu Teacher"
-local function interagirComWaterKungFuTeacher()
-    local NPC = workspace.IgnoreList.Int.NPCs.Shops["Sharkman Park"]["Water Kung-Fu Teacher"]
-    if NPC and NPC.PrimaryPart then
-        local npcPos = NPC.PrimaryPart.Position
-        local Player = game.Players.LocalPlayer
-        local Character = Player.Character
-        local distance = (npcPos - Character.HumanoidRootPart.Position).Magnitude
-
-        if distance > 10 then
-            tepe(NPC.PrimaryPart.CFrame * CFrame.new(0, 0, 3))
-            task.wait(2)
-        end
-
-        DialogueEvent:FireServer("TalkToNpc", {["NpcName"] = "Water Kung-Fu Teacher"})
-    end
-end
-
--- Toggle para interagir com o NPC
-Tabs.Misc:AddSection("Vendedor do Estilo de luta Water Kung-Fu")
-Tabs.Misc:AddToggle("TP Water Kung-Fu Teacher", {
-    Title = "TP Water Kung-Fu Teacher",
-    Default = false,
-    Callback = function(Value)
-        if Value then interagirComWaterKungFuTeacher() end
-    end
-})
-
-
--- Função de teleporte
-local function tepe(TargetCFrame)
-    local Player = game.Players.LocalPlayer
-    local Character = Player.Character
-    if not Character or not Character.PrimaryPart then return false end
-    if (tick() - lastTeleport) <= 0.3 and lastCFrame == TargetCFrame then return false end
-
-    lastTeleport = tick()
-    lastCFrame = TargetCFrame
-
-    local HumanoidRootPart = Character:FindFirstChild("HumanoidRootPart")
-    if HumanoidRootPart then
-        HumanoidRootPart.CanCollide = false
-        HumanoidRootPart.CFrame = TargetCFrame
-        task.wait(0.1)
-        HumanoidRootPart.CanCollide = true
-        return true
-    end
-
-    return false
-end
-
--- Função de interação com o NPC "Electric Teacher"
-local function interagirComElectricTeacher()
-    local NPC = workspace.IgnoreList.Int.NPCs.Shops["Skypie Upper"]["Eletric Teacher"]
-    if NPC and NPC.PrimaryPart then
-        local npcPos = NPC.PrimaryPart.Position
-        local Player = game.Players.LocalPlayer
-        local Character = Player.Character
-        local distance = (npcPos - Character.HumanoidRootPart.Position).Magnitude
-
-        if distance > 10 then
-            tepe(NPC.PrimaryPart.CFrame * CFrame.new(0, 0, 3))
-            task.wait(2)
-        end
-
-        DialogueEvent:FireServer("TalkToNpc", {["NpcName"] = "Eletric Teacher"})
-    end
-end
-
--- Toggle para interagir com o NPC
-Tabs.Misc:AddSection("Vendedor do Estilo de luta  Electric")
-Tabs.Misc:AddToggle("TP Vendedor do Estilo de luta ", {
-    Title = "TP Vendedor do Estilo de luta",
-    Default = false,
-    Callback = function(Value)
-        if Value then interagirComElectricTeacher() end
-    end
-})
-
--- Função de interação com o NPC "Instinct Teacher"
-local function interagirComInstinctTeacher()
-    local NPC = workspace.IgnoreList.Int.NPCs.Shops["Skypie Upper"]["Instinct Teacher"]
-    if NPC and NPC.PrimaryPart then
-        local npcPos = NPC.PrimaryPart.Position
-        local Player = game.Players.LocalPlayer
-        local Character = Player.Character
-        local distance = (npcPos - Character.HumanoidRootPart.Position).Magnitude
-
-        if distance > 10 then
-            tepe(NPC.PrimaryPart.CFrame * CFrame.new(0, 0, 3))
-            task.wait(2)
-        end
-
-        DialogueEvent:FireServer("TalkToNpc", {["NpcName"] = "Instinct Teacher"})
-    end
-end
-
--- Toggle para interagir com o NPC
-Tabs.Misc:AddSection("Vendedor do Haki da Visao")
-Tabs.Misc:AddToggle("TP Vendedor do Haki da Visao", {
-    Title = "TP Vendedor do Haki da Visao",
-    Default = false,
-    Callback = function(Value)
-        if Value then interagirComInstinctTeacher() end
-    end
-})
-
 Tabs.Server:AddSection("Server Options")
 
 Tabs.Server:AddToggle("Auto Hop Server", {
