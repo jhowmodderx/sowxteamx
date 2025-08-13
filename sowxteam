@@ -223,44 +223,46 @@ local function TweenStopped()
     end
 end
 
-local TweenService = game:GetService("TweenService")
-local Player = game.Players.LocalPlayer
+local lastCFrame = nil
+local lastTeleport = 0
 
--- Teleporte suave anti-reset
+-- Função de Teleporte com correção para movimentação após o teleporte
 local function tepe(TargetCFrame)
+    -- Verifica se o jogador e a parte principal estão disponíveis
+    local Player = game.Players.LocalPlayer
     local Character = Player.Character
-    local HRP = Character and Character:FindFirstChild("HumanoidRootPart")
-    if not HRP then return false end
-
-    -- Distância total
-    local distancia = (TargetCFrame.Position - HRP.Position).Magnitude
-    
-    -- Se muito longe, vai em passos
-    if distancia > 50 then
-        local passos = math.ceil(distancia / 40) -- cada passo até ~40 studs
-        local posAtual = HRP.CFrame
-
-        for i = 1, passos do
-            local novaPos = posAtual.Position + ((TargetCFrame.Position - posAtual.Position) / (passos - i + 1))
-            local tween = TweenService:Create(
-                HRP,
-                TweenInfo.new(0.15, Enum.EasingStyle.Linear),
-                {CFrame = CFrame.new(novaPos)}
-            )
-            tween:Play()
-            tween.Completed:Wait()
-            posAtual = HRP.CFrame
-            task.wait(0.05) -- pequeno delay pra parecer movimento natural
-        end
-    else
-        -- Pequeno deslocamento, pode ser direto
-        HRP.CFrame = TargetCFrame
+    if not Character or not Character.PrimaryPart then
+        return false
     end
-    
-    return true
+
+    -- Evita teletransportes repetidos de forma rápida
+    if (tick() - lastTeleport) <= 0.3 and lastCFrame == TargetCFrame then
+        return false
+    end
+
+    -- Atualiza os valores de teleporte
+    lastTeleport = tick()
+    lastCFrame = TargetCFrame
+
+    -- Teleportando o personagem para o destino
+    local HumanoidRootPart = Character:FindFirstChild("HumanoidRootPart")
+    if HumanoidRootPart then
+        -- Desativando colisão temporária para evitar problemas após o teleporte
+        HumanoidRootPart.CanCollide = false
+
+        -- Teleportando o personagem
+        HumanoidRootPart.CFrame = TargetCFrame
+
+        -- Espera um pouco para garantir que o teleporte foi realizado
+        task.wait(0.1)
+
+        -- Reativando colisão após o teleporte
+        HumanoidRootPart.CanCollide = true
+        return true
+    end
+
+    return false
 end
-
-
 
 table.insert(conepc, BodyVelocity:GetPropertyChangedSignal("Parent"):Connect(TweenStopped))
 
