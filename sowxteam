@@ -13,6 +13,7 @@ local QuestsDecriptions = require(ReplicatedStorage.MainModules.Essentials.Quest
 local EnemiesFolders = {}
 local CFrameAngle = CFrame.Angles(math.rad(- 90), 0, 0)
 
+
 local function a()
     local QuestsList = {}
     local CurrentQuest = nil
