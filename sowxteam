@@ -1076,7 +1076,6 @@ local function fireTouch(part)
     end
 end
 Tabs.Misc:AddSection("Teleportes")
-
 local islands = {}
 local map = workspace:FindFirstChild("Map")
 if map then
@@ -1088,30 +1087,30 @@ if map then
 end
 
 local IslandDropdown = Tabs.Misc:AddDropdown("IslandDropdown", {
-    Title = "Selecione a Ilha",
+    Title = "Selecione a ilha",
     Values = islands,
     Multi = false,
     Default = islands[1] or nil
 })
 
 Tabs.Misc:AddButton({
-    Title = "Ir Para Ilha",
+    Title = "Teleportar Para Ilha",
     Callback = function()
         local selectedIsland = IslandDropdown.Value
         if selectedIsland and map then
             local island = map:FindFirstChild(selectedIsland)
             if island and island:FindFirstChild("Base") then
                 local base = island.Base
-                local targetPos
+                local targetCFrame
 
                 if base:FindFirstChild("HumanoidRootPart") then
-                    targetPos = base.HumanoidRootPart.Position
+                    targetCFrame = base.HumanoidRootPart.CFrame
                 else
-                    targetPos = base.WorldPivot.Position + Vector3.new(0, 5, 0)
+                    targetCFrame = CFrame.new(base.WorldPivot.Position + Vector3.new(0, 5, 0))
                 end
 
-                -- Usa a função 'tepe' ao invés de MoveTo
-                tepe(targetPos)
+                -- Chama o teleporte corrigido
+                tepe(targetCFrame)
             end
         end
     end
