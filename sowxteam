@@ -1172,10 +1172,8 @@ local NPCs = {
 ["Master Sword Dealer"] = {
     path = workspace.IgnoreList.Int.NPCs.Shops["Skypie Down"]["Master Sword Dealer"],
     npcName = "Master Sword Dealer"
+},
 }
-
-}
-
 -- Função universal para teleportar e interagir com NPCs
 local function teleportarParaNPC(npcData)
     local NPC = npcData.path
@@ -1224,7 +1222,7 @@ Tabs.Misc:AddDropdown("NPCDropdown", {
         "Vendedor do Haki da Visão",
         "Sword Dealer (Foosha Village)",
         "Rare Sword Dealer",
-        "Master Sword Dealer"
+        "Master Sword Dealer",
     },
     Multi = false,
     Default = 1,
@@ -1237,6 +1235,21 @@ Tabs.Misc:AddDropdown("NPCDropdown", {
         end
     end
 })
+
+Tabs.Misc:AddSection("Sea Event")
+Tabs.Misc:AddToggle("FireTouchToggle", {
+      Title = "Ilha do Sea Beast (wait 2 - 4 min)",
+        Description = "Teleporta para a ilha do Sea Beast enquanto ativo",
+        Default = false,
+        Callback = function(state)
+            if state then
+                tepe(CFrame.new(4321, 8, 9599))
+            end
+        end
+    })
+
+
+
 Tabs.Server:AddSection("Server Options")
 
 Tabs.Server:AddToggle("Auto Hop Server", {
