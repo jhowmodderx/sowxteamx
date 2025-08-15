@@ -1,0 +1,546 @@
+local PreloadConstants = {
+	PlaceVersionSupport = 4000,
+	BypassVersion = "V3",
+}
+
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/jhowmodderxxxx/haxstore/refs/heads/main/savemanagerhax"))()
+local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/jhowmodderxxxx/haxstore/refs/heads/main/interface"))()
+
+local Window = Fluent:CreateWindow({
+    Title = "SOWxTEAM",
+    SubTitle = "By RodrigoGTyx | FISH | SCRIPT ATUALIZADO DIA 15/08/25",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(580, 460),
+    Acrylic = false,
+    Theme = "Amethyst",
+    MinimizeKey = Enum.KeyCode.LeftAlt
+})
+
+-- Criando as Tabs
+local MainTab = Window:AddTab({ Title = "Auto Farm", Icon = "zap" })
+local TeleportTab = Window:AddTab({ Title = "Teleportes", Icon = "navigation" })
+local PlayerTab = Window:AddTab({ Title = "Player", Icon = "user" })
+local MiscTab = Window:AddTab({ Title = "Outros", Icon = "settings" })
+
+-- Configurações
+local Settings = {
+    AutoCast = false,
+    AutoShake = false,
+    AutoReel = false,
+    FreezePlayer = false,
+    WalkOnWater = false,
+    NoClip = false,
+    FishRadar = false,
+    GPS = false,
+    HideUI = false,
+    AntiAFK = false,
+    CastMode = "Legit",
+    ShakeMode = "Navigation",
+    ReelMode = "Blatant",
+    WalkZone = "Ocean"
+}
+
+-- Serviços
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local CollectionService = game:GetService("CollectionService")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+-- Variáveis de controle
+local AntiAFKConnection
+
+-- Funções principais
+local function AutoCast()
+    if Settings.AutoCast and LocalPlayer.Character then
+        local tool = LocalPlayer.Character:FindFirstChildOfClass("Tool")
+        if tool and not tool:FindFirstChild("bobber") then
+            if Settings.CastMode == "Legit" then
+                game:GetService("VirtualInputManager"):SendMouseButtonEvent(0, 0, 0, true, LocalPlayer, 0)
+                task.wait(0.5)
+                game:GetService("VirtualInputManager"):SendMouseButtonEvent(0, 0, 0, false, LocalPlayer, 0)
+            else
+                tool.events.cast:FireServer(math.random(90, 99))
+            end
+        end
+    end
+end
+
+local function AutoShake()
+    if Settings.AutoShake then
+        local shakeui = LocalPlayer.PlayerGui:FindFirstChild("shakeui")
+        if shakeui then
+            local button = shakeui:FindFirstChild("safezone"):FindFirstChild("button")
+            if button then
+                if Settings.ShakeMode == "Navigation" then
+                    game:GetService("GuiService").SelectedObject = button
+                    task.wait(0.1)
+                    game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.Return, false, game)
+                    task.wait(0.1)
+                    game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.Return, false, game)
+                else
+                    game:GetService("VirtualInputManager"):SendMouseButtonEvent(
+                        button.AbsolutePosition.X + button.AbsoluteSize.X/2,
+                        button.AbsolutePosition.Y + button.AbsoluteSize.Y/2,
+                        0, true, LocalPlayer, 0
+                    )
+                    task.wait(0.1)
+                    game:GetService("VirtualInputManager"):SendMouseButtonEvent(
+                        button.AbsolutePosition.X + button.AbsoluteSize.X/2,
+                        button.AbsolutePosition.Y + button.AbsoluteSize.Y/2,
+                        0, false, LocalPlayer, 0
+                    )
+                end
+            end
+        end
+    end
+end
+
+local function AutoReel()
+    if Settings.AutoReel then
+        local reel = LocalPlayer.PlayerGui:FindFirstChild("reel")
+        if reel then
+            local playerbar = reel:FindFirstChild("bar"):FindFirstChild("playerbar")
+            local fish = reel:FindFirstChild("bar"):FindFirstChild("fish")
+            if playerbar and fish then
+                if Settings.ReelMode == "Legit" then
+                    playerbar.Position = fish.Position
+                else
+                    ReplicatedStorage.events.reelfinished:FireServer(100, false)
+                end
+            end
+        end
+    end
+end
+
+local function UpdateFishRadar()
+    for _, v in ipairs(CollectionService:GetTagged("radarTag")) do
+        if v:IsA("BillboardGui") or v:IsA("SurfaceGui") then
+            v.Enabled = Settings.FishRadar
+        end
+    end
+end
+
+local function UpdateGPS()
+    if Settings.GPS then
+        local gps = ReplicatedStorage.resources.items.items.GPS.GPS.gpsMain.xyz:Clone()
+        gps.Parent = LocalPlayer.PlayerGui.hud.safezone.backpack
+        
+        local conn = RunService.Heartbeat:Connect(function()
+            local pos = LocalPlayer.Character.HumanoidRootPart.Position
+            gps.Text = string.format("X: %.1f | Y: %.1f | Z: %.1f", pos.X, pos.Y, pos.Z)
+        end)
+        
+        return conn
+    end
+    return nil
+end
+
+-- Função para atualizar lista de jogadores
+local function UpdatePlayerList()
+    local playerList = {}
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            table.insert(playerList, player.Name)
+        end
+    end
+    return playerList
+end
+
+-- ABA: FARM AUTOMATICO
+local AutoCastToggle = MainTab:AddToggle("AutoCast", {
+    Title = "AUTO CAST",
+    Default = false
+})
+
+AutoCastToggle:OnChanged(function(value)
+    Settings.AutoCast = value
+    spawn(function()
+        while Settings.AutoCast do
+            AutoCast()
+            task.wait(1)
+        end
+    end)
+end)
+
+local CastModeDropdown = MainTab:AddDropdown("CastMode", {
+    Title = "MODO CAST",
+    Values = {"Legit", "Blatant"},
+    Multi = false,
+    Default = "Legit",
+})
+
+CastModeDropdown:OnChanged(function(value)
+    Settings.CastMode = value
+end)
+
+local AutoShakeToggle = MainTab:AddToggle("AutoShake", {
+    Title = "AUTO SHAKE",
+    Default = false
+})
+
+AutoShakeToggle:OnChanged(function(value)
+    Settings.AutoShake = value
+    spawn(function()
+        while Settings.AutoShake do
+            AutoShake()
+            task.wait()
+        end
+    end)
+end)
+
+local ShakeModeDropdown = MainTab:AddDropdown("ShakeMode", {
+    Title = "MODO SHAKE",
+    Values = {"Navigation", "Mouse"},
+    Multi = false,
+    Default = "Navigation",
+})
+
+ShakeModeDropdown:OnChanged(function(value)
+    Settings.ShakeMode = value
+end)
+
+local AutoReelToggle = MainTab:AddToggle("AutoReel", {
+    Title = "AUTO REEL",
+    Default = false
+})
+
+AutoReelToggle:OnChanged(function(value)
+    Settings.AutoReel = value
+    spawn(function()
+        while Settings.AutoReel do
+            AutoReel()
+            task.wait()
+        end
+    end)
+end)
+
+local ReelModeDropdown = MainTab:AddDropdown("ReelMode", {
+    Title = "MODO REEL",
+    Values = {"Legit", "Blatant"},
+    Multi = false,
+    Default = "Blatant",
+})
+
+ReelModeDropdown:OnChanged(function(value)
+    Settings.ReelMode = value
+end)
+
+-- ABA: TELEPORTES
+local farmSpots = {
+    {"LOCAL #1 (ÓTIMO)", CFrame.new(5802.14, 135.30, 403.35)},
+    {"LOCAL #2 (ÓTIMO)", CFrame.new(-3842.70, 133.25, 340.56)},
+    {"LOCAL #3 (ÓTIMO)", CFrame.new(-2024.93, 130.18, 557.97)},
+    {"LOCAL #4 (ÓTIMO)", CFrame.new(-3844.12, -563.34, 1068.31)}
+}
+
+for _, spot in ipairs(farmSpots) do
+    TeleportTab:AddButton({
+        Title = spot[1],
+        Description = "Teleportar para local de farm",
+        Callback = function()
+            pcall(function()
+                LocalPlayer.Character.HumanoidRootPart.CFrame = spot[2]
+                Fluent:Notify({
+                    Title = "Teleporte",
+                    Content = "Teleportado para " .. spot[1],
+                    Duration = 3
+                })
+            end)
+        end
+    })
+end
+
+TeleportTab:AddButton({
+    Title = "JACK MARROW",
+    Description = "Teleportar para Jack Marrow",
+    Callback = function()
+        pcall(function()
+            LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-2824.36, 214.31, 1518.13)
+            Fluent:Notify({
+                Title = "Teleporte",
+                Content = "Teleportado para Jack Marrow",
+                Duration = 3
+            })
+        end)
+    end
+})
+
+TeleportTab:AddButton({
+    Title = "REPARAR MAPA",
+    Description = "Reparar mapa do tesouro",
+    Callback = function()
+        pcall(function()
+            for _, v in pairs(LocalPlayer.Backpack:GetChildren()) do 
+                if v.Name == "Treasure Map" then
+                    LocalPlayer.Character.Humanoid:EquipTool(v)
+                    workspace.world.npcs["Jack Marrow"].treasure.repairmap:InvokeServer()
+                    Fluent:Notify({
+                        Title = "Mapa",
+                        Content = "Mapa reparado com sucesso!",
+                        Duration = 3
+                    })
+                    break
+                end
+            end
+        end)
+    end
+})
+
+-- Teleporte para Jogadores
+TeleportTab:AddSection("TELEPORTE PARA JOGADORES")
+
+local PlayerDropdown = TeleportTab:AddDropdown("PlayerTeleport", {
+    Title = "SELECIONE O JOGADOR",
+    Values = UpdatePlayerList(),
+    Multi = false,
+    Default = nil,
+})
+
+PlayerDropdown:OnChanged(function(selected)
+    if selected then
+        local player = Players:FindFirstChild(selected)
+        if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            pcall(function()
+                LocalPlayer.Character.HumanoidRootPart.CFrame = player.Character.HumanoidRootPart.CFrame
+                Fluent:Notify({
+                    Title = "Teleporte",
+                    Content = "Teleportado para " .. player.Name,
+                    Duration = 3
+                })
+            end)
+        end
+    end
+end)
+
+TeleportTab:AddButton({
+    Title = "🔄 ATUALIZAR LISTA",
+    Description = "Atualizar lista de jogadores",
+    Callback = function()
+        PlayerDropdown:SetValues(UpdatePlayerList())
+        Fluent:Notify({
+            Title = "Atualização",
+            Content = "Lista de jogadores atualizada!",
+            Duration = 2
+        })
+    end
+})
+
+-- ABA: JOGADOR
+local FreezeToggle = PlayerTab:AddToggle("FreezePlayer", {
+    Title = "CONGELAR JOGADOR",
+    Default = false
+})
+
+FreezeToggle:OnChanged(function(value)
+    Settings.FreezePlayer = value
+    if value then
+        local root = LocalPlayer.Character.HumanoidRootPart
+        local originalPos = root.CFrame
+        spawn(function()
+            while Settings.FreezePlayer do
+                root.CFrame = originalPos
+                task.wait()
+            end
+        end)
+    end
+end)
+
+local WalkOnWaterToggle = PlayerTab:AddToggle("WalkOnWater", {
+    Title = "ANDAR NA ÁGUA",
+    Default = false
+})
+
+WalkOnWaterToggle:OnChanged(function(value)
+    Settings.WalkOnWater = value
+    for _, zone in ipairs(workspace.zones.fishing:GetChildren()) do
+        if zone.Name == Settings.WalkZone or (Settings.WalkZone == "Ocean" and zone.Name == "Deep Ocean") then
+            zone.CanCollide = value
+        end
+    end
+end)
+
+local WalkZoneDropdown = PlayerTab:AddDropdown("WalkZone", {
+    Title = "ZONA DE ÁGUA",
+    Values = {"Ocean", "Desolate Deep", "The Depths"},
+    Multi = false,
+    Default = "Ocean",
+})
+
+WalkZoneDropdown:OnChanged(function(value)
+    Settings.WalkZone = value
+end)
+
+local NoClipToggle = PlayerTab:AddToggle("NoClip", {
+    Title = "WALLHACK (NOCLIP)",
+    Default = false
+})
+
+NoClipToggle:OnChanged(function(value)
+    Settings.NoClip = value
+    if value then
+        RunService.Stepped:Connect(function()
+            if Settings.NoClip and LocalPlayer.Character then
+                for _, part in ipairs(LocalPlayer.Character:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = false
+                    end
+                end
+            end
+        end)
+    end
+end)
+
+-- ABA: OUTROS
+local FishRadarToggle = MiscTab:AddToggle("FishRadar", {
+    Title = "RADAR DE PEIXES",
+    Default = false
+})
+
+FishRadarToggle:OnChanged(function(value)
+    Settings.FishRadar = value
+    UpdateFishRadar()
+end)
+
+local GPSToggle = MiscTab:AddToggle("GPS", {
+    Title = "GPS GAMEPASS",
+    Default = false
+})
+
+GPSToggle:OnChanged(function(value)
+    Settings.GPS = value
+    if value then
+        local conn = UpdateGPS()
+        if conn then
+            Fluent:Notify({
+                Title = "GPS",
+                Content = "GPS ativado com sucesso!",
+                Duration = 3
+            })
+        end
+    else
+        if LocalPlayer.PlayerGui.hud.safezone.backpack:FindFirstChild("xyz") then
+            LocalPlayer.PlayerGui.hud.safezone.backpack.xyz:Destroy()
+        end
+    end
+end)
+
+local HideUIToggle = MiscTab:AddToggle("HideUI", {
+    Title = "OCULTAR UI",
+    Default = false
+})
+
+HideUIToggle:OnChanged(function(value)
+    Settings.HideUI = value
+    if LocalPlayer.PlayerGui:FindFirstChild("hud") then
+        LocalPlayer.PlayerGui.hud.safezone.Visible = not value
+    end
+end)
+
+local AntiAFKToggle = MiscTab:AddToggle("AntiAFK", {
+    Title = "ANTI AFK",
+    Default = false
+})
+
+AntiAFKToggle:OnChanged(function(value)
+    Settings.AntiAFK = value
+    if value then
+        AntiAFKConnection = game:GetService("Players").LocalPlayer.Idled:Connect(function()
+            if Settings.AntiAFK then
+                game:GetService("VirtualUser"):CaptureController()
+                game:GetService("VirtualUser"):ClickButton2(Vector2.new())
+            end
+        end)
+    else
+        if AntiAFKConnection then
+            AntiAFKConnection:Disconnect()
+            AntiAFKConnection = nil
+        end
+    end
+end)
+
+MiscTab:AddButton({
+    Title = "VENDER INVENTÁRIO",
+    Description = "Vender todos os itens do inventário",
+    Callback = function()
+        ReplicatedStorage.events.SellAll:InvokeServer()
+        Fluent:Notify({
+            Title = "Venda",
+            Content = "Inventário vendido!",
+            Duration = 3
+        })
+    end
+})
+
+MiscTab:AddButton({
+    Title = "VENDER PEIXES (MÃO)",
+    Description = "Vender peixes na mão",
+    Callback = function()
+        ReplicatedStorage.events.Sell:InvokeServer()
+        Fluent:Notify({
+            Title = "Venda",
+            Content = "Peixes vendidos!",
+            Duration = 3
+        })
+    end
+})
+
+MiscTab:AddButton({
+    Title = "COPIAR POSIÇÃO",
+    Description = "Copiar posição atual para clipboard",
+    Callback = function()
+        local pos = LocalPlayer.Character.HumanoidRootPart.Position
+        setclipboard(string.format("CFrame.new(%.1f, %.1f, %.1f)", pos.X, pos.Y, pos.Z))
+        Fluent:Notify({
+            Title = "Posição",
+            Content = "Posição copiada para clipboard!",
+            Duration = 3
+        })
+    end
+})
+
+MiscTab:AddButton({
+    Title = "DISCORD HAX STORE",
+    Description = "Copiar link do Discord",
+    Callback = function()
+        setclipboard("https://discord.gg/MbqyhEJ3")
+        Fluent:Notify({
+            Title = "Discord",
+            Content = "Link copiado para clipboard!",
+            Duration = 3
+        })
+    end
+})
+
+-- Configurar SaveManager e InterfaceManager
+SaveManager:SetLibrary(Fluent)
+InterfaceManager:SetLibrary(Fluent)
+
+-- Configurar pasta de save
+SaveManager:SetFolder("SOWxTEAM")
+
+-- Configurar configurações que serão salvas
+SaveManager:BuildConfigSection(MiscTab)
+InterfaceManager:BuildInterfaceSection(MiscTab)
+
+-- Carregar configurações
+SaveManager:LoadAutoloadConfig()
+
+-- Atualizar automaticamente quando um jogador entra/sai
+Players.PlayerAdded:Connect(function()
+    PlayerDropdown:SetValues(UpdatePlayerList())
+end)
+
+Players.PlayerRemoving:Connect(function()
+    PlayerDropdown:SetValues(UpdatePlayerList())
+end)
+
+-- Notificação inicial
+Fluent:Notify({
+    Title = "SOWxTEAM",
+    Content = "Script carregado com sucesso!",
+    Duration = 5
+})
