@@ -670,7 +670,7 @@ end)
 
 local Window = Fluent:CreateWindow({
     Title = "SOWxTEAM",
-    SubTitle = "By RodrigoGTyx | VOX SEAS | SCRIPT ATUALIZADO DIA 13/08/25",
+    SubTitle = "By RodrigoGTyx | VOX SEAS | SCRIPT ATUALIZADO DIA 16/08/25",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
     Acrylic = false,
@@ -733,32 +733,38 @@ Tabs.Main:AddToggle("AutoFarm", {
                         task.wait(0.2)
                         continue
                     end
+
                     local CurrentQuest = a()
                     if not CurrentQuest then continue end
+
                     if not ten(CurrentQuest.Target) then
                         ete(CurrentQuest.NpcName, CurrentQuest.Id)
                         continue
                     end
+
                     local Enemy = clst(CurrentQuest.Target)
                     if not Enemy then continue end
                     CurrentTarget = Enemy
+
                     local HumanoidRootPart = Enemy:FindFirstChild("HumanoidRootPart")
                     local Humanoid = Enemy:FindFirstChild("Humanoid")
+
                     if HumanoidRootPart and Humanoid and Humanoid.Health > 0 then
                         if _ENV.BringMob then
                             brnge(CurrentQuest.Target, HumanoidRootPart.CFrame)
                         end
+
+                        -- apenas usa a função de locomoção (sem tp instantâneo)
                         local targetCFrame = HumanoidRootPart.CFrame * CFrame.new(0, FarmHeight, 0) * CFrameAngle
-                        if not tepe(targetCFrame) then
-                            if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
-                                Player.Character.HumanoidRootPart.CFrame = targetCFrame
-                            end
-                        end
+                        tepe(targetCFrame)
+
                         task.wait(0)
+
                         local AllQuestEnemies = pgaall(CurrentQuest.Target)
                         if #AllQuestEnemies > 0 then
                             faz(AllQuestEnemies)
                         end
+
                         d()
                     end
                 end
@@ -766,6 +772,7 @@ Tabs.Main:AddToggle("AutoFarm", {
         end
     end
 })
+
 
 
 Tabs.Main:AddToggle("BringMob", {
