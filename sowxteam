@@ -681,21 +681,21 @@ local Window = Fluent:CreateWindow({
         local Tabs = {
             Main = Window:AddTab({
                 Title = "Farm",
-            
+                Icon = "user",
 
             }),
             Misc = Window:AddTab({
                 Title = "Outros",
-         
+              Icon = "navigation",
             }),
             Server = Window:AddTab({
                 Title = "Server",
-            
+                Icon = "user",
                 }),
 
                 discord = Window:AddTab({
                 Title = "Discord",
-        
+                 Icon = "settings"
                 }),
         }
 
