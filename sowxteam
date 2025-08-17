@@ -813,7 +813,6 @@ Tabs.Main:AddDropdown("BossDropdown", {
 })
 
 -- Toggle Auto Farm Boss
-
 Tabs.Main:AddToggle("AutoFarmBoss", {
     Title = "Auto Farm Boss",
     Default = false,
@@ -841,12 +840,9 @@ Tabs.Main:AddToggle("AutoFarmBoss", {
                             brnge(Enemy.Name, HumanoidRootPart.CFrame)
                         end
 
+                        -- Apenas locomoção suave, sem teleporte instantâneo
                         local targetCFrame = HumanoidRootPart.CFrame * CFrame.new(0, FarmHeight, 0) * CFrameAngle
-                        if not tepe(targetCFrame) then
-                            if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
-                                Player.Character.HumanoidRootPart.CFrame = targetCFrame
-                            end
-                        end
+                        tepe(targetCFrame)
 
                         faz({Enemy})
                         d()
