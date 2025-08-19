@@ -462,7 +462,7 @@ AntiAFKToggle:OnChanged(function(value)
     end
 end)
 
-MiscTab:AddButton({
+PlayerTab:AddToggle({
     Title = "VENDER INVENTÁRIO",
     Description = "Vender todos os itens do inventário",
     Callback = function()
@@ -475,7 +475,7 @@ MiscTab:AddButton({
     end
 })
 
-MiscTab:AddButton({
+PlayerTab:AddToggle({
     Title = "VENDER PEIXES (MÃO)",
     Description = "Vender peixes na mão",
     Callback = function()
@@ -488,7 +488,7 @@ MiscTab:AddButton({
     end
 })
 
-MiscTab:AddButton({
+PlayerTab:AddToggle({
     Title = "COPIAR POSIÇÃO",
     Description = "Copiar posição atual para clipboard",
     Callback = function()
