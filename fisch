@@ -9,7 +9,7 @@ local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.
 
 local Window = Fluent:CreateWindow({
     Title = "SOWxTEAM",
-    SubTitle = "By RodrigoGTyx | FISH | SCRIPT ATUALIZADO DIA 15/08/25",
+    SubTitle = "By RodrigoGTyx | FISH | SCRIPT ATUALIZADO DIA 19/08/25",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
     Acrylic = false,
@@ -18,7 +18,7 @@ local Window = Fluent:CreateWindow({
 })
 
 -- Criando as Tabs
-local MainTab = Window:AddTab({ Title = "Auto Farm", Icon = "zap" })
+local MainTab = Window:AddTab({ Title = "Auto Farm", Icon = "settings" })
 local TeleportTab = Window:AddTab({ Title = "Teleportes", Icon = "navigation" })
 local PlayerTab = Window:AddTab({ Title = "Player", Icon = "user" })
 local MiscTab = Window:AddTab({ Title = "Outros", Icon = "settings" })
