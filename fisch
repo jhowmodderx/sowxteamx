@@ -9,13 +9,140 @@ local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.
 
 local Window = Fluent:CreateWindow({
     Title = "SOWxTEAM",
-    SubTitle = "By RodrigoGTyx | FISH | SCRIPT ATUALIZADO DIA 19/08/25",
+    SubTitle = "By RodrigoGTyx | FISH | SCRIPT ATUALIZADO DIA 22/08/25",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
     Acrylic = false,
     Theme = "Amethyst",
     MinimizeKey = Enum.KeyCode.LeftAlt
 })
+
+
+local DeviceType = game:GetService("UserInputService").TouchEnabled and "Mobile" or "PC"
+
+
+local UserInputService = game:GetService("UserInputService")
+local Player = game.Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+
+local ClickButton = Instance.new("ScreenGui")
+ClickButton.Parent = PlayerGui
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "LogoButton"
+MainFrame.Parent = ClickButton
+MainFrame.AnchorPoint = Vector2.new(1, 0)
+MainFrame.BackgroundTransparency = 0.8
+MainFrame.BackgroundColor3 = Color3.fromRGB(38, 38, 38)
+MainFrame.BorderSizePixel = 0
+MainFrame.Position = UDim2.new(1, -60, 0, 10)
+MainFrame.Size = UDim2.new(0, 45, 0, 45)
+
+local UICorner = Instance.new("UICorner")
+UICorner.Parent = MainFrame
+
+local TextButton = Instance.new("TextButton")
+TextButton.Parent = MainFrame
+TextButton.BackgroundColor3 = Color3.fromRGB(0, 255, 255)
+TextButton.BackgroundTransparency = 1
+TextButton.BorderSizePixel = 0
+TextButton.Size = UDim2.new(1, 0, 1, 0)
+TextButton.Text = "SOWxTEAM"
+TextButton.TextColor3 = Color3.fromRGB(170, 0, 255)
+TextButton.TextSize = 14
+TextButton.AutoButtonColor = false
+
+
+local ImageLabel = Instance.new("ImageLabel")
+ImageLabel.Parent = TextButton
+ImageLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+ImageLabel.BackgroundTransparency = 1
+ImageLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
+ImageLabel.Size = UDim2.new(1, 0, 1, 0)
+ImageLabel.Image = "rbxassetid://78127779035849"
+ImageLabel.ZIndex = 1
+
+TextButton.ZIndex = 2
+
+
+
+local ModMenu = Instance.new("Frame")
+ModMenu.Name = "ModMenu"
+ModMenu.Parent = PlayerGui
+ModMenu.AnchorPoint = Vector2.new(0.5, 0.5)
+ModMenu.BackgroundTransparency = 0.8
+ModMenu.BackgroundColor3 = Color3.fromRGB(38, 38, 38)
+ModMenu.BorderSizePixel = 0
+ModMenu.Position = UDim2.new(0.5, 0, 0.5, 0)
+ModMenu.Size = UDim2.new(0, 200, 0, 300)
+ModMenu.Visible = false
+
+local UICorner_2 = Instance.new("UICorner")
+UICorner_2.Parent = ModMenu
+
+TextButton.MouseButton1Click:Connect(function()
+    ModMenu.Visible = not ModMenu.Visible
+end)
+
+
+if DeviceType == "Mobile" then
+    MainFrame.Position = UDim2.new(1, -60, 0, 10)
+else
+    MainFrame.Position = UDim2.new(1, -120, 0, 10)
+
+end
+
+
+
+local UserInputService = game:GetService("UserInputService") 
+local dragging, dragInput, dragStart, startPos
+
+local function update(input)
+    local delta = input.Position - dragStart
+    MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+
+--mexer o flutuante com nome hax store no pc--
+MainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = MainFrame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then dragging = false
+                dragging = false
+
+                 end 
+  
+            end) 
+
+       end 
+
+  end)
+
+
+
+
+
+
+
+
+--mexer o flutuante com nome hax store no mobile--
+  MainFrame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+
+    end 
+
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        update(input)
+
+    end 
+end)
 
 -- Criando as Tabs
 local MainTab = Window:AddTab({ Title = "Auto Farm", Icon = "settings" })
@@ -290,6 +417,41 @@ TeleportTab:AddButton({
     end
 })
 
+
+
+-- 📦 VENDER INVENTÁRIO
+TeleportTab:AddButton({
+    Title = "📦 VENDER INVENTÁRIO",
+    Description = "Vender todos os itens do inventário",
+    Callback = function()
+        pcall(function()
+            ReplicatedStorage.events.SellAll:InvokeServer()
+            Fluent:Notify({
+                Title = "Venda",
+                Content = "Inventário vendido!",
+                Duration = 3
+            })
+        end)
+    end
+})
+
+-- 🎣 VENDER PEIXES (MÃO)
+TeleportTab:AddButton({
+    Title = "🎣 VENDER PEIXES (MÃO)",
+    Description = "Vender apenas os peixes que estão na mão",
+    Callback = function()
+        pcall(function()
+            ReplicatedStorage.events.Sell:InvokeServer()
+            Fluent:Notify({
+                Title = "Venda",
+                Content = "Peixes vendidos!",
+                Duration = 3
+            })
+        end)
+    end
+})
+
+
 -- Teleporte para Jogadores
 TeleportTab:AddSection("TELEPORTE PARA JOGADORES")
 
@@ -405,29 +567,6 @@ FishRadarToggle:OnChanged(function(value)
     UpdateFishRadar()
 end)
 
-local GPSToggle = MiscTab:AddToggle("GPS", {
-    Title = "GPS GAMEPASS",
-    Default = false
-})
-
-GPSToggle:OnChanged(function(value)
-    Settings.GPS = value
-    if value then
-        local conn = UpdateGPS()
-        if conn then
-            Fluent:Notify({
-                Title = "GPS",
-                Content = "GPS ativado com sucesso!",
-                Duration = 3
-            })
-        end
-    else
-        if LocalPlayer.PlayerGui.hud.safezone.backpack:FindFirstChild("xyz") then
-            LocalPlayer.PlayerGui.hud.safezone.backpack.xyz:Destroy()
-        end
-    end
-end)
-
 local HideUIToggle = MiscTab:AddToggle("HideUI", {
     Title = "OCULTAR UI",
     Default = false
@@ -440,7 +579,7 @@ HideUIToggle:OnChanged(function(value)
     end
 end)
 
-local AntiAFKToggle = MiscTab:AddToggle("AntiAFK", {
+local AntiAFKToggle = TeleportTab:AddToggle("AntiAFK", {
     Title = "ANTI AFK",
     Default = false
 })
@@ -462,36 +601,15 @@ AntiAFKToggle:OnChanged(function(value)
     end
 end)
 
-PlayerTab:AddToggle({
-    Title = "VENDER INVENTÁRIO",
-    Description = "Vender todos os itens do inventário",
-    Callback = function()
-        ReplicatedStorage.events.SellAll:InvokeServer()
-        Fluent:Notify({
-            Title = "Venda",
-            Content = "Inventário vendido!",
-            Duration = 3
-        })
-    end
+
+-- COPIAR POSIÇÃO
+local CopyPosToggle = PlayerTab:AddButton("CopyPos", {
+    Title = "📍 COPIAR POSIÇÃO",
+    Default = false
 })
 
-PlayerTab:AddToggle({
-    Title = "VENDER PEIXES (MÃO)",
-    Description = "Vender peixes na mão",
-    Callback = function()
-        ReplicatedStorage.events.Sell:InvokeServer()
-        Fluent:Notify({
-            Title = "Venda",
-            Content = "Peixes vendidos!",
-            Duration = 3
-        })
-    end
-})
-
-PlayerTab:AddToggle({
-    Title = "COPIAR POSIÇÃO",
-    Description = "Copiar posição atual para clipboard",
-    Callback = function()
+CopyPosToggle:OnChanged(function(Value)
+    if Value then
         local pos = LocalPlayer.Character.HumanoidRootPart.Position
         setclipboard(string.format("CFrame.new(%.1f, %.1f, %.1f)", pos.X, pos.Y, pos.Z))
         Fluent:Notify({
@@ -499,21 +617,56 @@ PlayerTab:AddToggle({
             Content = "Posição copiada para clipboard!",
             Duration = 3
         })
+        CopyPosToggle:SetValue(false)
     end
-})
+end)
 
-MiscTab:AddButton({
-    Title = "DISCORD HAX STORE",
-    Description = "Copiar link do Discord",
-    Callback = function()
-        setclipboard("https://discord.gg/MbqyhEJ3")
-        Fluent:Notify({
-            Title = "Discord",
-            Content = "Link copiado para clipboard!",
-            Duration = 3
-        })
-    end
-})
+
+
+-- Anti Kick / Anti Disconnect
+local ThirdPartyUserService = game:GetService("ThirdPartyUserService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- Override de Kick
+if LocalPlayer then
+    -- Substitui a função Kick do jogador
+    local mt = getrawmetatable(game)
+    setreadonly(mt, false)
+    
+    local oldIndex = mt.__namecall
+    mt.__namecall = newcclosure(function(self, ...)
+        local args = {...}
+        local method = getnamecallmethod()
+        
+        if method == "Kick" then
+            warn("Tentativa de Kick bloqueada!")
+            return
+        end
+        
+        return oldIndex(self, ...)
+    end)
+    
+    setreadonly(mt, true)
+end
+
+-- Também previne kicks via ThirdPartyUserService
+if ThirdPartyUserService then
+    ThirdPartyUserService.Kick:Connect(function(reason)
+        warn("ThirdPartyUserService tentou kicker você, mas foi bloqueado! Razão: "..tostring(reason))
+        -- Você pode até exibir uma notificação na tela se quiser
+        if game:GetService("Players").LocalPlayer then
+            game:GetService("Players").LocalPlayer:Kick("Bloqueado temporariamente pelo Anti-Kick")
+        end
+    end)
+end
+
+print("Anti-Kick ativo!")
+
+
+
+
+
 
 -- Configurar SaveManager e InterfaceManager
 SaveManager:SetLibrary(Fluent)
