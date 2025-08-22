@@ -144,6 +144,12 @@ UserInputService.InputChanged:Connect(function(input)
     end 
 end)
 
+
+TextButton.MouseButton1Click:Connect(function()
+    game:GetService("VirtualInputManager"):SendKeyEvent(true, "LeftAlt", false, game)
+    game:GetService("VirtualInputManager"):SendKeyEvent(false, "LeftAlt", false, game)
+end)
+
 -- Criando as Tabs
 local MainTab = Window:AddTab({ Title = "Auto Farm", Icon = "settings" })
 local TeleportTab = Window:AddTab({ Title = "Teleportes", Icon = "navigation" })
