@@ -538,7 +538,6 @@ local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.
 
 local DeviceType = game:GetService("UserInputService").TouchEnabled and "Mobile" or "PC"
 
-
 local UserInputService = game:GetService("UserInputService")
 local Player = game.Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
@@ -565,11 +564,10 @@ TextButton.BackgroundColor3 = Color3.fromRGB(0, 255, 255)
 TextButton.BackgroundTransparency = 1
 TextButton.BorderSizePixel = 0
 TextButton.Size = UDim2.new(1, 0, 1, 0)
-TextButton.Text = "SOWxTEAM"
+TextButton.Text = ""  -- Oculta o texto para mostrar só o ícone
 TextButton.TextColor3 = Color3.fromRGB(170, 0, 255)
 TextButton.TextSize = 14
 TextButton.AutoButtonColor = false
-
 
 local ImageLabel = Instance.new("ImageLabel")
 ImageLabel.Parent = TextButton
@@ -577,12 +575,10 @@ ImageLabel.AnchorPoint = Vector2.new(0.5, 0.5)
 ImageLabel.BackgroundTransparency = 1
 ImageLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
 ImageLabel.Size = UDim2.new(1, 0, 1, 0)
-ImageLabel.Image = "rbxassetid://78127779035849"
+ImageLabel.Image = "rbxassetid://125930606242191"  -- ID do adesivo desejado
 ImageLabel.ZIndex = 1
 
 TextButton.ZIndex = 2
-
-
 
 local ModMenu = Instance.new("Frame")
 ModMenu.Name = "ModMenu"
@@ -602,17 +598,12 @@ TextButton.MouseButton1Click:Connect(function()
     ModMenu.Visible = not ModMenu.Visible
 end)
 
-
 if DeviceType == "Mobile" then
     MainFrame.Position = UDim2.new(1, -60, 0, 10)
 else
     MainFrame.Position = UDim2.new(1, -120, 0, 10)
-
 end
 
-
-
-local UserInputService = game:GetService("UserInputService") 
 local dragging, dragInput, dragStart, startPos
 
 local function update(input)
@@ -620,48 +611,30 @@ local function update(input)
     MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
 end
 
-
---mexer o flutuante com nome hax store no pc--
 MainFrame.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         dragging = true
         dragStart = input.Position
         startPos = MainFrame.Position
         input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then dragging = false
+            if input.UserInputState == Enum.UserInputState.End then
                 dragging = false
+            end
+        end)
+    end
+end)
 
-                 end 
-  
-            end) 
-
-       end 
-
-  end)
-
-
-
-
-
-
-
-
---mexer o flutuante com nome hax store no mobile--
-  MainFrame.InputChanged:Connect(function(input)
+MainFrame.InputChanged:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
         dragInput = input
-
-    end 
-
+    end
 end)
 
 UserInputService.InputChanged:Connect(function(input)
     if input == dragInput and dragging then
         update(input)
-
-    end 
+    end
 end)
-
 
 TextButton.MouseButton1Click:Connect(function()
     game:GetService("VirtualInputManager"):SendKeyEvent(true, "LeftAlt", false, game)
@@ -670,7 +643,7 @@ end)
 
 local Window = Fluent:CreateWindow({
     Title = "SOWxTEAM",
-    SubTitle = "By RodrigoGTyx | VOX SEAS | SCRIPT ATUALIZADO DIA 16/08/25",
+    SubTitle = "By RodrigoGTyx | VOX SEAS | SCRIPT ATUALIZADO DIA 22/08/25",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
     Acrylic = false,
