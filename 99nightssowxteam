@@ -10,11 +10,9 @@ local Window = Fluent:CreateWindow({
     Acrylic = false,
     Theme = "Amethyst",
     MinimizeKey = Enum.KeyCode.LeftAlt
-
 })
 
 local DeviceType = game:GetService("UserInputService").TouchEnabled and "Mobile" or "PC"
-
 
 local UserInputService = game:GetService("UserInputService")
 local Player = game.Players.LocalPlayer
@@ -42,11 +40,10 @@ TextButton.BackgroundColor3 = Color3.fromRGB(0, 255, 255)
 TextButton.BackgroundTransparency = 1
 TextButton.BorderSizePixel = 0
 TextButton.Size = UDim2.new(1, 0, 1, 0)
-TextButton.Text = "SOWxTEAM"
+TextButton.Text = ""  -- Oculta o texto para mostrar só o ícone
 TextButton.TextColor3 = Color3.fromRGB(170, 0, 255)
 TextButton.TextSize = 14
 TextButton.AutoButtonColor = false
-
 
 local ImageLabel = Instance.new("ImageLabel")
 ImageLabel.Parent = TextButton
@@ -54,12 +51,10 @@ ImageLabel.AnchorPoint = Vector2.new(0.5, 0.5)
 ImageLabel.BackgroundTransparency = 1
 ImageLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
 ImageLabel.Size = UDim2.new(1, 0, 1, 0)
-ImageLabel.Image = "rbxassetid://78127779035849"
+ImageLabel.Image = "rbxassetid://130982887174515"  -- ID do adesivo desejado
 ImageLabel.ZIndex = 1
 
 TextButton.ZIndex = 2
-
-
 
 local ModMenu = Instance.new("Frame")
 ModMenu.Name = "ModMenu"
@@ -79,17 +74,12 @@ TextButton.MouseButton1Click:Connect(function()
     ModMenu.Visible = not ModMenu.Visible
 end)
 
-
 if DeviceType == "Mobile" then
     MainFrame.Position = UDim2.new(1, -60, 0, 10)
 else
     MainFrame.Position = UDim2.new(1, -120, 0, 10)
-
 end
 
-
-
-local UserInputService = game:GetService("UserInputService") 
 local dragging, dragInput, dragStart, startPos
 
 local function update(input)
@@ -97,48 +87,30 @@ local function update(input)
     MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
 end
 
-
---mexer o flutuante com nome hax store no pc--
 MainFrame.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         dragging = true
         dragStart = input.Position
         startPos = MainFrame.Position
         input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then dragging = false
+            if input.UserInputState == Enum.UserInputState.End then
                 dragging = false
+            end
+        end)
+    end
+end)
 
-                 end 
-  
-            end) 
-
-       end 
-
-  end)
-
-
-
-
-
-
-
-
---mexer o flutuante com nome hax store no mobile--
-  MainFrame.InputChanged:Connect(function(input)
+MainFrame.InputChanged:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
         dragInput = input
-
-    end 
-
+    end
 end)
 
 UserInputService.InputChanged:Connect(function(input)
     if input == dragInput and dragging then
         update(input)
-
-    end 
+    end
 end)
-
 
 TextButton.MouseButton1Click:Connect(function()
     game:GetService("VirtualInputManager"):SendKeyEvent(true, "LeftAlt", false, game)
@@ -274,7 +246,6 @@ local function sFLY(vfly)
     local CONTROL = {F = 0, B = 0, L = 0, R = 0, Q = 0, E = 0}
     local lCONTROL = {F = 0, B = 0, L = 0, R = 0, Q = 0, E = 0}
     local SPEED = 0
-
     local function FLY()
         FLYING = true
         local BG = Instance.new('BodyGyro')
@@ -450,7 +421,6 @@ end
 
 -- PLAYER TAB
 local MovementSection = PlayerTab:AddSection("SpeedHack")
-
 local SpeedSlider = PlayerTab:AddSlider("Player Speed", {
     Title = "Player Speed",
     Default = 16,
@@ -747,8 +717,6 @@ local PeltTraderEspToggle = EspTab:AddToggle("Pelt Trader ESP Toggle", {
 
 -- GAME TAB
 local GameSection = GameTab:AddSection("KillAura")
-
-
 local KillAuraDistanceSlider = GameTab:AddSlider("Kill Aura Distance", {
     Title = "Kill Aura distancia",
     Default = 25,
@@ -840,7 +808,6 @@ local AutoChopTreeToggle = GameTab:AddToggle("Auto Chop Tree Toggle", {
 
 -- BRING ITEMS TAB
 local BringItemsSection = BringItemTab:AddSection("Bring All Items")
-
 local BringAllItems = BringItemTab:AddButton({
     Title = "Puxar Todos Itens",
     Callback = function()
@@ -1035,7 +1002,6 @@ local BringAllCoins = BringItemTab:AddButton({
     end
 })
 
-
 -- Key bindings for fly
 UserInputService.InputBegan:Connect(function(input, processed)
     if processed then return end
@@ -1072,7 +1038,6 @@ task.spawn(function()
                 updatedInfo.CurrentPlayers,
                 updatedInfo.MaxPlayers
             )
-
             ServerInfoLabel:SetDesc(updatedContent)
         end)
     end
