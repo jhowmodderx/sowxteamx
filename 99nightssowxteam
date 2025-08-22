@@ -449,7 +449,7 @@ local function MobileFly()
 end
 
 -- PLAYER TAB
-local MovementSection = PlayerTab:AddSection("Movement")
+local MovementSection = PlayerTab:AddSection("SpeedHack")
 
 local SpeedSlider = PlayerTab:AddSlider("Player Speed", {
     Title = "Player Speed",
@@ -527,7 +527,7 @@ local FlyToggle = PlayerTab:AddToggle("Fly Toggle", {
     end
 })
 
-local UtilitySection = PlayerTab:AddSection("Utilities")
+local UtilitySection = PlayerTab:AddSection("Outros")
 
 local NoclipToggle = PlayerTab:AddToggle("Noclip Toggle", {
     Title = "Noclip",
@@ -635,7 +635,7 @@ local TeleportToCampfire = PlayerTab:AddButton({
 })
 
 -- ESP TAB
-local EspSection = EspTab:AddSection("ESP Features")
+local EspSection = EspTab:AddSection("ESP Draw (lua)")
 
 local ItemsEspToggle = EspTab:AddToggle("Items ESP Toggle", {
     Title = "Items ESP",
@@ -746,7 +746,7 @@ local PeltTraderEspToggle = EspTab:AddToggle("Pelt Trader ESP Toggle", {
 })
 
 -- GAME TAB
-local GameSection = GameTab:AddSection("Game Features")
+local GameSection = GameTab:AddSection("KillAura")
 
 
 local KillAuraDistanceSlider = GameTab:AddSlider("Kill Aura Distance", {
