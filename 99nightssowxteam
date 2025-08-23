@@ -4,13 +4,14 @@ local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.
 
 local Window = Fluent:CreateWindow({
     Title = "SOWxTEAM",
-    SubTitle = "By RodrigoGTyx | 99 NIGHTS | SCRIPT ATUALIZADO DIA 22/08/25",
+    SubTitle = "By RodrigoGTyx | 99 NIGHTS | SCRIPT ATUALIZADO DIA 23/08/25",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
     Acrylic = false,
-    Theme = "Amethyst",
+    Theme = "Amethyst",  -- EXATAMENTE esse tema
     MinimizeKey = Enum.KeyCode.LeftAlt
 })
+
 
 local DeviceType = game:GetService("UserInputService").TouchEnabled and "Mobile" or "PC"
 
@@ -141,11 +142,17 @@ TextButton.MouseButton1Click:Connect(function()
 end)
 
 -- Create Tabs
-local InfoTab = Window:AddTab({ Title = "Informações", Icon = "" })
 local PlayerTab = Window:AddTab({ Title = "Jogador", Icon = "" })
 local EspTab = Window:AddTab({ Title = "Esps", Icon = "" })
-local GameTab = Window:AddTab({ Title = "Outros", Icon = "" })
+local GameTab = Window:AddTab({ Title = "KillAura", Icon = "" })
 local BringItemTab = Window:AddTab({ Title = "Puxar Itens", Icon = "" })
+
+
+task.defer(function()
+    task.wait(0.1)
+    Window:SetActiveTab(PlayerTab)
+end)
+
 
 -- Variables
 local ActiveEspItems, ActiveDistanceEsp, ActiveEspEnemy, ActiveEspChildren, ActiveEspPeltTrader = false, false, false, false, false
@@ -346,6 +353,7 @@ local function sFLY(vfly)
     end)
     FLY()
 end
+
 
 local function NOFLY()
     FLYING = false
@@ -616,7 +624,7 @@ local NoFogToggle = PlayerTab:AddToggle("No Fog Toggle", {
     end
 })
 
-local TeleportSection = PlayerTab:AddSection("Teleportation")
+local TeleportSection = PlayerTab:AddSection("Zona Segura")
 
 local TeleportToCampfire = PlayerTab:AddButton({
     Title = "Teleportar para fogueira",
@@ -830,7 +838,7 @@ local AutoChopTreeToggle = GameTab:AddToggle("Auto Chop Tree Toggle", {
 })
 
 -- BRING ITEMS TAB
-local BringItemsSection = BringItemTab:AddSection("Bring All Items")
+local BringItemsSection = BringItemTab:AddSection("Puxar Todos Itens")
 local BringAllItems = BringItemTab:AddButton({
     Title = "Puxar Todos Itens",
     Callback = function()
@@ -847,7 +855,7 @@ local BringAllItems = BringItemTab:AddButton({
     end
 })
 
-local ResourcesSection = BringItemTab:AddSection("Resources")
+local ResourcesSection = BringItemTab:AddSection("Recrusos")
 
 local BringAllLogs = BringItemTab:AddButton({
     Title = "Puxar todos os troncos",
@@ -906,7 +914,7 @@ local BringAllFuel = BringItemTab:AddButton({
     end
 })
 
-local ItemsSection = BringItemTab:AddSection("Specific Items")
+local ItemsSection = BringItemTab:AddSection("Itens Especificos")
 
 local BringAllScraps = BringItemTab:AddButton({
     Title = "Puxar todos retalhos",
@@ -964,7 +972,7 @@ local BringAllFoods = BringItemTab:AddButton({
     end
 })
 
-local MedicalSection = BringItemTab:AddSection("Medical Items")
+local MedicalSection = BringItemTab:AddSection("Kit Medico")
 
 local BringAllBandage = BringItemTab:AddButton({
     Title = "Puxar Todas Bandagens",
@@ -995,7 +1003,7 @@ local BringAllMedkit = BringItemTab:AddButton({
     end
 })
 
-local OtherSection = BringItemTab:AddSection("Other Items")
+local OtherSection = BringItemTab:AddSection("Outros")
 
 local BringAllChildren = BringItemTab:AddButton({
     Title = "Puxar Todas Crianças",
@@ -1044,25 +1052,6 @@ UserInputService.InputBegan:Connect(function(input, processed)
                 NOFLY()
             end
         end
-    end
-end)
-
--- Server info updater
-task.spawn(function()
-    while true do
-        task.wait(1)
-        task.spawn(function()
-            local updatedInfo = getServerInfo()
-            local updatedContent = string.format(
-                "📌 PlaceId: %s\n🔑 JobId: %s\n🧪 IsStudio: %s\n👥 Players: %d/%d",
-                updatedInfo.PlaceId,
-                updatedInfo.JobId,
-                tostring(updatedInfo.IsStudio),
-                updatedInfo.CurrentPlayers,
-                updatedInfo.MaxPlayers
-            )
-            ServerInfoLabel:SetDesc(updatedContent)
-        end)
     end
 end)
 
