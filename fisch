@@ -60,6 +60,30 @@ ImageLabel.Size = UDim2.new(1, 20, 1, 20)  -- aumentei aqui
 ImageLabel.Image = "rbxassetid://125930606242191"
 ImageLabel.ZIndex = 1
 
+
+
+task.wait(0.1) -- Garante que a UI está pronta
+
+-- Adiciona a logo grande no fundo roxo vazio
+local Logo = Instance.new("ImageLabel")
+Logo.Name = "CustomLogo"
+Logo.Image = "rbxassetid://125930606242191"
+Logo.BackgroundTransparency = 1
+Logo.Size = UDim2.new(0, 120, 0, 120)                  -- LOGO grande! Ajuste aqui se quiser maior/menor
+Logo.Position = UDim2.new(0, 15, 1, -140)  -- um pouco mais para a esquerda
+
+
+Logo.ZIndex = 10
+
+-- Logo redonda
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(1, 0)
+UICorner.Parent = Logo
+
+-- Insere no frame principal da UI Fluent
+Logo.Parent = Window.Root   -- Se o fundo roxo for outro frame, substitua por Window.ContainerHolder ou similar
+
+
 TextButton.ZIndex = 2
 
 local ModMenu = Instance.new("Frame")
