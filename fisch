@@ -421,7 +421,7 @@ TeleportTab:AddButton({
 
 
 -- 📦 VENDER INVENTÁRIO
-TeleportTab:AddButton({
+MainTab:AddButton({
     Title = "📦 VENDER INVENTÁRIO",
     Description = "Vender todos os itens do inventário",
     Callback = function()
@@ -437,7 +437,7 @@ TeleportTab:AddButton({
 })
 
 -- 🎣 VENDER PEIXES (MÃO)
-TeleportTab:AddButton({
+MainTab:AddButton({
     Title = "🎣 VENDER PEIXES (MÃO)",
     Description = "Vender apenas os peixes que estão na mão",
     Callback = function()
