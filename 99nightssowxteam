@@ -50,9 +50,10 @@ ImageLabel.Parent = TextButton
 ImageLabel.AnchorPoint = Vector2.new(0.5, 0.5)
 ImageLabel.BackgroundTransparency = 1
 ImageLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
-ImageLabel.Size = UDim2.new(1, 0, 1, 0)
-ImageLabel.Image = "rbxassetid://125930606242191"  -- ID do adesivo desejado
+ImageLabel.Size = UDim2.new(1, 20, 1, 20)  -- aumentei aqui
+ImageLabel.Image = "rbxassetid://125930606242191"
 ImageLabel.ZIndex = 1
+
 
 TextButton.ZIndex = 2
 
