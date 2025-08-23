@@ -857,7 +857,7 @@ HideUIToggle:OnChanged(function(value)
     end
 end)
 
-local AntiAFKToggle = TeleportTab:AddToggle("AntiAFK", {
+local AntiAFKToggle = MainTab:AddToggle("AntiAFK", {
     Title = "ANTI AFK",
     Default = false
 })
