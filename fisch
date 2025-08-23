@@ -850,6 +850,272 @@ UserInputService.InputBegan:Connect(function(input, processed)
     end
 end)
 
+
+-- ===================================================================
+-- 💠 TELEPORTES (Rod, Item, Quest, NPC) — compatível com seu Fluent
+-- Cole depois de criar:  local TeleportTab = Window:AddTab({ Title="Teleportes", Icon="navigation" })
+-- ===================================================================
+
+-- helper: pega chaves em lista (sem usar table.keys)
+local function dictKeys(dict)
+    local t = {}
+    for k,_ in pairs(dict) do
+        table.insert(t, k)
+    end
+    table.sort(t)
+    return t
+end
+
+-- helper: teleporta com pequeno offset e guarda origem
+local function doTeleport(targetCFrame, saveOriginVarName)
+    local ok, err = pcall(function()
+        local char = LocalPlayer.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            _G[saveOriginVarName] = char.HumanoidRootPart.CFrame
+            char.HumanoidRootPart.CFrame = targetCFrame * CFrame.new(0, 5, 0)
+        end
+    end)
+    if not ok then
+        Fluent:Notify({ Title = "Teleporte", Content = "Erro: ".. tostring(err), Duration = 3 })
+    end
+end
+
+local function goBack(saveOriginVarName)
+    local last = _G[saveOriginVarName]
+    if last then
+        pcall(function()
+            local char = LocalPlayer.Character
+            if char and char:FindFirstChild("HumanoidRootPart") then
+                char.HumanoidRootPart.CFrame = last
+            end
+        end)
+    else
+        Fluent:Notify({ Title = "Voltar", Content = "Nenhuma posição anterior salva!", Duration = 3 })
+    end
+end
+
+-- =========================
+-- 🔹 ROD TELEPORTS
+-- =========================
+local rodTeleportLocations = {
+	["Training Rod"] = CFrame.new(457.693848, 148.357529, 230.414307),  
+	["Plastic Rod"] = CFrame.new(454.425385, 148.169739, 229.172424), 
+	["Carbon Rod"] = CFrame.new(454.083618, 150.590073, 225.328827), 
+	["Long Rod"] = CFrame.new(485.695038, 171.656326, 145.746109), 
+	["Fast Rod"] = CFrame.new(447.183563, 148.225739, 220.187454), 
+	["Lucky Rod"] = CFrame.new(446.085999, 148.253006, 222.1600), 
+	["Steady Rod"] = CFrame.new(-1511.23523, 139.679504, 759.417114), 
+	["Fortune Rod"] = CFrame.new(-1520.87964, 141.283279, 771.946777), 
+	["Rapid Rod"] = CFrame.new(-1509.24463, 139.725906, 759.628174), 
+	["Nocturnal Rod"] = CFrame.new(-141.874237, -515.313538, 1139.04529), 
+	["Aurora Rod"] = CFrame.new(-141.874237, -515.313538, 1139.04529), 
+	["Rod Of The Depths"] = CFrame.new(1689.9, -902.4, 1437.7), 
+	["Magnet Rod"] = CFrame.new(-194.998871, 130.148087, 1930.97107), 
+	["King's Rod"] = CFrame.new(1375.57642, -810.201721, -303.509247), 
+	["Reinforced Rod"] = CFrame.new(-986.474365, -245.473938, -2689.79248),
+	["Trident Rod"] = CFrame.new(-1484.34192, -222.325562, -2194.77002),
+	["Scurvy Rod"] = CFrame.new(-2828.21851, 213.457199, 1512.20959),
+	["Phoenix Rod"] = CFrame.new(5971.03125, 270.377502, 852.372559),
+	["Heaven's Rod"] = CFrame.new(19980, 916, 5384),
+	["Summit Rod"] = CFrame.new(20207.7539, 736.058289, 5711.35156),
+	["Avalanche Rod"] = CFrame.new(19770.1816, 415.680969, 5419.19678),
+	["Ice Warper's Rod"] = CFrame.new(19965, 587, 5573),
+	["Arctic Rod"] = CFrame.new(19578.2363, 132.338379, 5307.38281),
+	["Abyssal Specter Rod"] = CFrame.new(-3804.09668, -566.402893, 1870.32849),
+	["Kraken Rod"] = CFrame.new(-4415.41699, -995.66217, 2054.45312),
+	["Depthseeker Rod"] = CFrame.new(-4466.24609, -596.11145, 1875.07166),
+	["Champions Rod"] = CFrame.new(-4277.4541, -602.719604, 1839.05908),
+	["Tempest Rod"] = CFrame.new(-4927.61865, -594.829651, 1856.89734),
+	["Zeus Rod"] = CFrame.new(-4270.84521, -626.403259, 2664.3479),
+	["Poseidon Rod"] = CFrame.new(-4086.14795, -557.409241, 895.166809),
+	["Ethereal Prism Rod"] = CFrame.new(-4359.83936, -11172.4326, 3718.91968),
+	["Leviathan's Fang Rod"] = CFrame.new(-2297.67651, -11185.3018, 7138.99023),
+	["Rod Of The Zenith"] = CFrame.new(-13625.1162, -11034.4316, 357.60199),
+	["Volcanic Rod"] = CFrame.new(-3178.24463, -2035.75085, 4021.57886),
+	["Brick Rod"] = CFrame.new(1321, 140, 1540),
+	["Crystalized Rod"] = CFrame.new(19240, 400, 6035),
+}
+TeleportTab:AddSection("Rod Teleports")
+local _rodValues = dictKeys(rodTeleportLocations)
+local _selectedRodName = _rodValues[1]
+local RodDropdown = TeleportTab:AddDropdown("RodDropdown", {
+    Title = "Escolha o Rod",
+    Values = _rodValues,
+    Multi = false,
+    Default = 1,
+})
+RodDropdown:OnChanged(function(v) _selectedRodName = v end)
+
+TeleportTab:AddButton({
+    Title = "Teleportar Rod",
+    Description = "Vai para o Rod selecionado",
+    Callback = function()
+        local cf = rodTeleportLocations[_selectedRodName]
+        if cf then doTeleport(cf, "__RodLastOrigin") end
+    end
+})
+TeleportTab:AddButton({
+    Title = "Voltar (Rod)",
+    Callback = function() goBack("__RodLastOrigin") end
+})
+
+-- =========================
+-- 🔹 ITEM TELEPORTS
+-- =========================
+local itemTeleportLocations = {
+	["GPS"] = CFrame.new(517, 152, 284),  
+	["Glider"] = CFrame.new(-1713, 149, 740),
+	["Pickaxe"] = CFrame.new(19783.1914, 415.743622, 5391.92041),
+	["Advanced Glider"] = CFrame.new(19939, 1142, 5544),
+	["Heart Of Zeus"] = CFrame.new(-2522, 138, 1593),
+	["Drill"] = CFrame.new(0, -85.39099884033203, 0),
+	["Crab Cage"] = CFrame.new(465, 150, 235),
+	["Conception Conch"] = CFrame.new(-145, -515, 1140),
+	["Common Crate"] = CFrame.new(-1140, 125, -1076),
+	["Sundial Totem"] = CFrame.new(-1215, 195, -1040),
+	["Tempest Totem"] = CFrame.new(20, 140, 1860),
+	["Windset Totem"] = CFrame.new(2845, 180, 2700),
+	["Smokescreen Totem"] = CFrame.new(2790, 140, -625),
+	["Meteor Totem"] = CFrame.new(-1945, 275, 230),
+	["Avalanche Totem"] = CFrame.new(19711, 468, 6059),
+	["Eclipse Totem"] = CFrame.new(5940, 265, 900),
+	["Blizzard Totem"] = CFrame.new(20148, 743, 5804),
+	["Aurora Totem"] = CFrame.new(-1810, -135, -3280),
+	["Cursed Storm Totem"] = CFrame.new(760, 2130, 16965),
+	["Zeus Storm Totem"] = CFrame.new(-4325, -625, 2685),
+	["Poseidon Wrath Totem"] = CFrame.new(-3955, -555, 855),
+}
+TeleportTab:AddSection("Item Teleports")
+local _itemValues = dictKeys(itemTeleportLocations)
+local _selectedItemName = _itemValues[1]
+local ItemDropdown = TeleportTab:AddDropdown("ItemDropdown", {
+    Title = "Escolha o Item",
+    Values = _itemValues,
+    Multi = false,
+    Default = 1,
+})
+ItemDropdown:OnChanged(function(v) _selectedItemName = v end)
+
+TeleportTab:AddButton({
+    Title = "Teleportar Item",
+    Description = "Vai para o Item selecionado",
+    Callback = function()
+        local cf = itemTeleportLocations[_selectedItemName]
+        if cf then doTeleport(cf, "__ItemLastOrigin") end
+    end
+})
+TeleportTab:AddButton({
+    Title = "Voltar (Item)",
+    Callback = function() goBack("__ItemLastOrigin") end
+})
+
+-- =========================
+-- 🔹 QUEST TELEPORTS
+-- =========================
+local questTeleportLocations = {
+	["Lost Rod"] = CFrame.new(2930, 130, 2620),
+	["Roslit Brick"] = CFrame.new(-1844, 194.5, 196.1),
+	["Ancient Isles Brick"] = CFrame.new(5959, 269, 850),
+	["The Depths Brick"] = CFrame.new(989, -734, 1136),
+	["Blue Energy Crystal"] = CFrame.new(20125, 211, 5450),
+	["Green Energy Crystal"] = CFrame.new(19870, 448, 5555),
+	["Yellow Energy Crystal"] = CFrame.new(19500, 335, 5550),
+	["Red Energy Crystal"] = CFrame.new(19920, 1140, 5350),
+	["Button 1"] = CFrame.new(400, 136, 265),
+	["Button 2"] = CFrame.new(-1716, 149, 732),
+	["Button 3"] = CFrame.new(-2566, 181, 1353),
+	["Button 4"] = CFrame.new(2930, 281, 2594),
+	["Button 5"] = CFrame.new(5506, 147, -315),
+	["TNT Lever 1"] = CFrame.new(-2522, 138, 1593),
+	["TNT Lever 2"] = CFrame.new(-2551, 150, 1667),
+	["TNT Lever 3"] = CFrame.new(-2729, 168, 1730),
+	["TNT Lever 4"] = CFrame.new(-2881, 314, 1605),
+	["TNT Lever 5"] = CFrame.new(-2835, 131, 1510),
+}
+TeleportTab:AddSection("Quest Teleports")
+local _questValues = dictKeys(questTeleportLocations)
+local _selectedQuestName = _questValues[1]
+local QuestDropdown = TeleportTab:AddDropdown("QuestDropdown", {
+    Title = "Escolha a Quest",
+    Values = _questValues,
+    Multi = false,
+    Default = 1,
+})
+QuestDropdown:OnChanged(function(v) _selectedQuestName = v end)
+
+TeleportTab:AddButton({
+    Title = "Teleportar Quest",
+    Description = "Vai para a Quest selecionada",
+    Callback = function()
+        local cf = questTeleportLocations[_selectedQuestName]
+        if cf then doTeleport(cf, "__QuestLastOrigin") end
+    end
+})
+TeleportTab:AddButton({
+    Title = "Voltar (Quest)",
+    Callback = function() goBack("__QuestLastOrigin") end
+})
+
+-- =========================
+-- 🔹 NPC TELEPORTS
+-- =========================
+local npcTeleportLocations = {
+	["Jack Marrow"] = CFrame.new(-2830, 215, 1518),
+	["Merchant"] = CFrame.new(466, 151, 225),
+	["Skin Merchant"] = CFrame.new(415, 135, 190),
+	["Angler"] = CFrame.new(480, 150, 295),
+	["Shipwright"] = CFrame.new(360, 135, 260),
+	["Inn Keeper"] = CFrame.new(490, 150, 245),
+	["Submariner"] = CFrame.new(-3355, -2270, 3800),
+	["Egg Salesman"] = CFrame.new(375, 135, 320),
+	["Sea Traveler"] = CFrame.new(140, 150, 2030),
+	["Lantern Keeper"] = CFrame.new(710, 165, 335),
+	["Phineas"] = CFrame.new(470, 150, 275),
+	["Captain Ahab"] = CFrame.new(362, 133, 294),
+	["Alfie"] = CFrame.new(-1515, 141, 765),
+	["Ashe"] = CFrame.new(-1705, 150, 735),
+	["Dr Glimmerfin"] = CFrame.new(-1320, 130, 300),
+	["Orc"] = CFrame.new(-1850, 165, 160),
+	["Wilson"] = CFrame.new(2935, 280, 2565),
+	["Merlin"] = CFrame.new(-928, 224, -998),
+	["Silas"] = CFrame.new(1545, 1690, 6310),
+	["Agaric"] = CFrame.new(2595, 130, -725),
+	["Synth"] = CFrame.new(-145, -515, 1140),
+	["The Keeper"] = CFrame.new(20, -705, 1255),
+	["Caleia"] = CFrame.new(980, 130, -1235),
+	["Minish"] = CFrame.new(-1322, 140, 1543),
+	["Chiseler"] = CFrame.new(6087, 195, 294),
+	["Meteoriticist"] = CFrame.new(5922, 262, 596),
+	["Hiker"] = CFrame.new(19526, 132, 5236),
+	["Bubble Mermaid"] = CFrame.new(-3550, 130, 568),
+	["Captain Neptune"] = CFrame.new(-3820, 135, 575),
+	["Dr. Crookspine"] = CFrame.new(-1915, 225, -530),
+}
+TeleportTab:AddSection("NPC Teleports")
+local _npcValues = dictKeys(npcTeleportLocations)
+local _selectedNpcName = _npcValues[1]
+local NpcDropdown = TeleportTab:AddDropdown("NpcDropdown", {
+    Title = "Escolha o NPC",
+    Values = _npcValues,
+    Multi = false,
+    Default = 1,
+})
+NpcDropdown:OnChanged(function(v) _selectedNpcName = v end)
+
+TeleportTab:AddButton({
+    Title = "Teleportar NPC",
+    Description = "Vai para o NPC selecionado",
+    Callback = function()
+        local cf = npcTeleportLocations[_selectedNpcName]
+        if cf then doTeleport(cf, "__NpcLastOrigin") end
+    end
+})
+TeleportTab:AddButton({
+    Title = "Voltar (NPC)",
+    Callback = function() goBack("__NpcLastOrigin") end
+})
+
+
 HideUIToggle:OnChanged(function(value)
     Settings.HideUI = value
     if LocalPlayer.PlayerGui:FindFirstChild("hud") then
@@ -940,10 +1206,6 @@ if ThirdPartyUserService then
 end
 
 print("Anti-Kick ativo!")
-
-
-
-
 
 
 -- Configurar SaveManager e InterfaceManager
