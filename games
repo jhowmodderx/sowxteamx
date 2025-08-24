@@ -2,6 +2,10 @@ local gameLoaders = {
     -- voxseas
     ["104067066727140"] = "https://raw.githubusercontent.com/jhowmodderx/sowxteamx/refs/heads/main/sowxteam",
    
+
+   -- forsaken
+    ["18687417158"] = "https://raw.githubusercontent.com/jhowmodderx/sowxteamx/refs/heads/main/forsaken",
+
     -- 99 Nights
     ["79546208627805"]  = "https://raw.githubusercontent.com/jhowmodderx/sowxteamx/refs/heads/main/99nightssowxteam",
     ["126509999114328"] = "https://raw.githubusercontent.com/jhowmodderx/sowxteamx/refs/heads/main/99nightssowxteam",
