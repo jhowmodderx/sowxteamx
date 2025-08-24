@@ -1,14 +1,14 @@
-    local gameLoaders = {
+local gameLoaders = {
     -- voxseas
     ["104067066727140"] = "https://raw.githubusercontent.com/jhowmodderx/sowxteamx/refs/heads/main/sowxteam",
    
     -- 99 Nights
-    ["79546208627805"] = "https://raw.githubusercontent.com/jhowmodderx/sowxteamx/refs/heads/main/99nightssowxteam",
+    ["79546208627805"]  = "https://raw.githubusercontent.com/jhowmodderx/sowxteamx/refs/heads/main/99nightssowxteam",
     ["126509999114328"] = "https://raw.githubusercontent.com/jhowmodderx/sowxteamx/refs/heads/main/99nightssowxteam",
     
     -- fisch
-    ["16732694052"] = "https://raw.githubusercontent.com/jhowmodderx/sowxteamx/refs/heads/main/fisch",
-    ["131716211654599"]  = "https://raw.githubusercontent.com/jhowmodderx/sowxteamx/refs/heads/main/fisch"
+    ["16732694052"]     = "https://raw.githubusercontent.com/jhowmodderx/sowxteamx/refs/heads/main/fisch",
+    ["131716211654599"] = "https://raw.githubusercontent.com/jhowmodderx/sowxteamx/refs/heads/main/fisch"
 }
 
 local gameId = tostring(game.PlaceId)
@@ -17,6 +17,5 @@ local loaderUrl = gameLoaders[gameId]
 if loaderUrl then
     loadstring(game:HttpGet(loaderUrl))()
 else
-    game.Players.LocalPlayer:Kick("No loader found for this game.")
+    game.Players.LocalPlayer:Kick("❌ Nenhum loader encontrado para este jogo.")
 end
-end)
