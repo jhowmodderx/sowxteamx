@@ -1,0 +1,1069 @@
+
+-- 99 Nights Script com Fluent UI
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/jhowmodderxxxx/haxstore/refs/heads/main/savemanagerhax"))()
+local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/jhowmodderxxxx/haxstore/refs/heads/main/interface"))()
+
+-- Verifica se já foi carregado
+if getgenv().NXP_LOADED then
+    error("Já carregado!")
+end
+getgenv().NXP_LOADED = true
+
+-- Criação da Window
+local Window = Fluent:CreateWindow({
+    Title = "SOWxTEAM",
+    SubTitle = "By RodrigoGTyx | [NOLI 🎭] FORSAKEN | SCRIPT ATUALIZADO DIA 24/08/25",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(580, 460),
+    Acrylic = false,
+    Theme = "Amethyst",
+    MinimizeKey = Enum.KeyCode.LeftAlt
+})
+
+-- Configuração do botão flutuante
+local DeviceType = game:GetService("UserInputService").TouchEnabled and "Mobile" or "PC"
+local UserInputService = game:GetService("UserInputService")
+local Player = game.Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+
+local ClickButton = Instance.new("ScreenGui")
+ClickButton.Parent = PlayerGui
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "LogoButton"
+MainFrame.Parent = ClickButton
+MainFrame.AnchorPoint = Vector2.new(1, 0)
+MainFrame.BackgroundTransparency = 0.8
+MainFrame.BackgroundColor3 = Color3.fromRGB(38, 38, 38)
+MainFrame.BorderSizePixel = 0
+MainFrame.Position = UDim2.new(1, -60, 0, 10)
+MainFrame.Size = UDim2.new(0, 45, 0, 45)
+
+local UICorner = Instance.new("UICorner")
+UICorner.Parent = MainFrame
+
+local TextButton = Instance.new("TextButton")
+TextButton.Parent = MainFrame
+TextButton.BackgroundColor3 = Color3.fromRGB(0, 255, 255)
+TextButton.BackgroundTransparency = 1
+TextButton.BorderSizePixel = 0
+TextButton.Size = UDim2.new(1, 0, 1, 0)
+TextButton.Text = ""
+TextButton.TextColor3 = Color3.fromRGB(170, 0, 255)
+TextButton.TextSize = 14
+TextButton.AutoButtonColor = false
+
+local ImageLabel = Instance.new("ImageLabel")
+ImageLabel.Parent = TextButton
+ImageLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+ImageLabel.BackgroundTransparency = 1
+ImageLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
+ImageLabel.Size = UDim2.new(1, 20, 1, 20)
+ImageLabel.Image = "rbxassetid://125930606242191"
+ImageLabel.ZIndex = 1
+
+task.wait(0.1)
+
+-- Logo grande
+local Logo = Instance.new("ImageLabel")
+Logo.Name = "CustomLogo"
+Logo.Image = "rbxassetid://125930606242191"
+Logo.BackgroundTransparency = 1
+Logo.Size = UDim2.new(0, 120, 0, 120)
+Logo.Position = UDim2.new(0, 15, 1, -140)
+Logo.ZIndex = 10
+
+local UICorner_Logo = Instance.new("UICorner")
+UICorner_Logo.CornerRadius = UDim.new(1, 0)
+UICorner_Logo.Parent = Logo
+
+Logo.Parent = Window.Root
+
+-- Sistema de drag do botão
+local dragging, dragInput, dragStart, startPos
+
+local function update(input)
+    local delta = input.Position - dragStart
+    MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+MainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = MainFrame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+MainFrame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        update(input)
+    end
+end)
+
+TextButton.MouseButton1Click:Connect(function()
+    game:GetService("VirtualInputManager"):SendKeyEvent(true, "LeftAlt", false, game)
+    game:GetService("VirtualInputManager"):SendKeyEvent(false, "LeftAlt", false, game)
+end)
+
+local Tabs = {
+    Main = Window:AddTab({
+        Title = "Principal",
+        Icon = "user"
+    }),
+    Killer = Window:AddTab({
+        Title = "Assassino",
+        Icon = "skull"
+    }),
+    Player = Window:AddTab({
+        Title = "Jogador",
+        Icon = "user"
+    }),
+    Teleport = Window:AddTab({
+        Title = "Teleportes",
+        Icon = "map-pin"
+    }),
+    Misc = Window:AddTab({
+        Title = "Outros",
+        Icon = "settings"
+    })
+}
+
+-- Variáveis globais do script
+local isKiller, isSurvivor, killerModel
+local activelyAutoing = false
+local generatorsDid = {}
+
+-- Função para detectar se é killer ou survivor
+task.spawn(function()
+    while task.wait() do
+        isKiller = (function()
+            for i, v in pairs(workspace.Players.Killers:GetChildren()) do
+                if v:GetAttribute("Username") and game.Players:FindFirstChild(v:GetAttribute("Username")) then
+                    killerModel = v
+                end
+                if v:GetAttribute("Username") == game.Players.LocalPlayer.Name then
+                    return true
+                end
+            end
+        end)()
+        isSurvivor = not isKiller
+    end
+end)
+
+-- Função para pegar o survivor mais próximo do mouse
+local function getClosestSurvivorToMouse(x, y)
+    local closestDistance = math.huge
+    local closestSurvivor = nil
+    local cam = workspace.CurrentCamera
+    for i, v in pairs(workspace.Players.Survivors:GetChildren()) do
+        if v:GetAttribute("Username") == game.Players.LocalPlayer.Name then continue end
+        local nihpos = v.HumanoidRootPart.Position
+        local vector, onScreen = cam:worldToViewportPoint(nihpos)
+        if onScreen then
+            local mag = (Vector2.new(x, y) - Vector2.new(vector.X, vector.Y)).magnitude
+            if mag < closestDistance then
+                closestDistance = mag
+                closestSurvivor = v
+            end
+        end
+    end
+    return closestSurvivor
+end
+
+-- ABA PRINCIPAL
+local generatorsSection = Tabs.Main:AddSection("Geradores")
+
+-- Generators ESP
+generatorsSection:AddToggle("Esp Geradores", {
+    Title = "ESP Geradores",
+    Default = false,
+    Callback = function(bool)
+        _G.generators = bool
+        task.spawn(function()
+            while task.wait() do
+                if _G.generators then
+                    pcall(function()
+                        for i, v in pairs(workspace.Map.Ingame.Map:GetChildren()) do
+                            if v.Name == "Generator" and not v:FindFirstChild("iskiddedfromneptz") then
+                                local hl = Instance.new("Highlight", v)
+                                hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                                hl.Name = "iskiddedfromneptz"
+                                hl.FillColor = Color3.fromRGB(255, 255, 51)
+                            elseif v:FindFirstChild("iskiddedfromneptz") and v.Name == "Generator" then
+                                if v.Progress.Value >= 100 then
+                                    v.iskiddedfromneptz.FillColor = Color3.fromRGB(0, 255, 0)
+                                end
+                            end
+                        end
+                    end)
+                else
+                    pcall(function()
+                        for i, v in pairs(workspace.Map.Ingame.Map:GetChildren()) do
+                            if v.Name == "Generator" and v:FindFirstChild("iskiddedfromneptz") then
+                                v.iskiddedfromneptz:Destroy()
+                            end
+                        end
+                    end)
+                    break
+                end
+            end
+        end)
+    end
+})
+
+-- Generators Nametags
+generatorsSection:AddToggle("GeneratorsNametags", {
+    Title = "Tags dos Geradores",
+    Default = false,
+    Callback = function(bool)
+        _G.generatorstag = bool
+        task.spawn(function()
+            while task.wait() do
+                if _G.generatorstag then
+                    local suc, res = pcall(function()
+                        for i, v in pairs(workspace.Map.Ingame.Map:GetChildren()) do
+                            if v.Name == "Generator" and not v:FindFirstChild("nametag") then
+                                local bb = Instance.new("BillboardGui", v)
+                                bb.Size = UDim2.new(4, 0, 1, 0)
+                                bb.AlwaysOnTop = true
+                                bb.Name = "nametag"
+                                local text = Instance.new("TextLabel", bb)
+                                text.TextColor3 = Color3.fromRGB(255, 255, 255)
+                                text.TextStrokeTransparency = 0
+                                text.Text = "Gerador (" .. v.Progress.Value .. "%)"
+                                text.TextSize = 20
+                                text.BackgroundTransparency = 1
+                                text.Size = UDim2.new(1, 0, 1, 0)
+                            elseif v:FindFirstChild("nametag") and v.Name == "Generator" then
+                                v.nametag.TextLabel.Text = "Gerador (" .. v.Progress.Value .. "%)"
+                            end
+                        end
+                    end)
+                else
+                    pcall(function()
+                        for i, v in pairs(workspace.Map.Ingame.Map:GetChildren()) do
+                            if v.Name == "Generator" and v:FindFirstChild("nametag") then
+                                v.nametag:Destroy()
+                            end
+                        end
+                    end)
+                    break
+                end
+            end
+        end)
+    end
+})
+
+-- Auto Complete Generator
+generatorsSection:AddToggle("AutoCompleteGenerator", {
+    Title = "Auto Completar Geradores [📜]",
+    Default = false,
+    Callback = function(bool)
+        _G.instantGenerator = bool
+        task.spawn(function()
+            while _G.instantGenerator and task.wait() do
+                if workspace.Map.Ingame:FindFirstChild("Map") then
+                    pcall(function()
+                        for i, v in pairs(workspace.Map.Ingame.Map:GetChildren()) do
+                            if not generatorsDid[v] and v.Name == "Generator" then
+                                generatorsDid[v] = true
+                                local old; old = hookfunction(getsenv(v.Scripts.Client).toggleGeneratorState, function(a)
+                                    if checkcaller() then return old(a) end
+                                    if not _G.instantGenerator then return old(a) end
+                                    if a ~= "enter" then return old("leave") end
+                                    local ou = v.Remotes.RF:InvokeServer("enter")
+                                    if ou ~= "fixing" then return end
+                                    activelyAutoing = true
+                                    for i = 1, 4 do
+                                        if v.Progress.Value >= 100 then break end
+                                        Fluent:Notify({
+                                            Title = "Gerador",
+                                            Content = "Progresso: " .. tostring(i),
+                                            Duration = 1
+                                        })
+                                        v.Remotes.RE:FireServer()
+                                        task.wait(1.2)
+                                    end
+                                    activelyAutoing = false
+                                    return ""
+                                end)
+                            end
+                        end
+                    end)
+                end
+            end
+        end)
+    end
+})
+
+-- Auto Start Generator
+generatorsSection:AddToggle("AutoStartGenerator", {
+    Title = "Auto Gerador",
+    Default = false,
+    Callback = function(bool)
+        _G.autoGen = bool
+        task.spawn(function()
+            while _G.autoGen and task.wait() do
+                if workspace.Map.Ingame:FindFirstChild("Map") then
+                    pcall(function()
+                        for i, v in pairs(workspace.Map.Ingame.Map:GetChildren()) do
+                            if v.Name == "Generator" then
+                                pcall(function()
+                                    local function continue()
+                                        if game.Players.LocalPlayer.PlayerGui:FindFirstChild("PuzzleUI") then return end
+                                        if activelyAutoing then return end
+                                        if v.Main:FindFirstChild("Prompt") then
+                                            fireproximityprompt(v.Main.Prompt)
+                                        end
+                                        task.wait(1)
+                                    end
+                                    local hello = v.Positions.Center.Position
+                                    local hello2 = v.Positions.Right.Position
+                                    local hello3 = v.Positions.Left.Position
+                                    if (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - hello).magnitude <= 4 then
+                                        continue()
+                                    elseif (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - hello2).magnitude <= 4 then
+                                        continue()
+                                    elseif (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - hello3).magnitude <= 4 then
+                                        continue()
+                                    end
+                                end)
+                            end
+                        end
+                    end)
+                end
+            end
+        end)
+    end
+})
+
+-- Botões de Generator
+generatorsSection:AddButton({
+    Title = "Auto Arrumar Gerador Atual",
+    Callback = function()
+        if activelyAutoing then return end
+        pcall(function()
+            for i, v in pairs(workspace.Map.Ingame.Map:GetChildren()) do
+                if v.Name == "Generator" then
+                    pcall(function()
+                        if game.Players.LocalPlayer.PlayerGui:FindFirstChild("PuzzleUI") then
+                            local hello = v.Positions.Center.Position
+                            if (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - hello).magnitude <= 21 then
+                                for i = 1, 4 do
+                                    if v.Progress.Value >= 100 then break end
+                                    if activelyAutoing then return end
+                                    if not game.Players.LocalPlayer.PlayerGui:FindFirstChild("PuzzleUI") then break end
+                                    Fluent:Notify({
+                                        Title = "Gerador",
+                                        Content = "Progresso: " .. tostring(i),
+                                        Duration = 1
+                                    })
+                                    v.Remotes.RE:FireServer()
+                                    task.wait(1.2)
+                                end
+                            end
+                        end
+                    end)
+                end
+            end
+        end)
+    end
+})
+
+generatorsSection:AddButton({
+    Title = "Arrumar Todos os Geradores",
+    Callback = function()
+        if activelyAutoing then return end
+        pcall(function()
+            for i, v in pairs(workspace.Map.Ingame.Map:GetChildren()) do
+                if v.Name == "Generator" then
+                    pcall(function()
+                        if v.Progress.Value >= 100 then return end
+                        local function checkOccupance(pos)
+                            for i, v in pairs(workspace.Players.Survivors:GetChildren()) do
+                                if not v:FindFirstChild("HumanoidRootPart") then continue end
+                                if v == game.Players.LocalPlayer then continue end
+                                if (v.HumanoidRootPart.Position - pos).magnitude <= 6 then
+                                    return true
+                                end
+                            end
+                            return false
+                        end
+                        local centerOccupied, rightOccupied, leftOccupied = checkOccupance(v.Positions.Center.Position), checkOccupance(v.Positions.Right.Position), checkOccupance(v.Positions.Left.Position)
+                        if centerOccupied and rightOccupied and leftOccupied then return end
+                        if not centerOccupied then
+                            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v.Positions.Center.CFrame
+                        elseif not rightOccupied then
+                            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v.Positions.Right.CFrame
+                        else
+                            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v.Positions.Left.CFrame
+                        end
+                        task.wait(0.2)
+                        v.Remotes.RF:InvokeServer("enter")
+                        for j = 1, 4 do
+                            if v.Progress.Value >= 100 then break end
+                            if activelyAutoing then return end
+                            Fluent:Notify({
+                                Title = "Gerador",
+                                Content = "Progresso: " .. tostring(j),
+                                Duration = 1
+                            })
+                            v.Remotes.RE:FireServer()
+                            task.wait(1.2)
+                        end
+                    end)
+                end
+            end
+        end)
+    end
+})
+
+-- Seção Assassinos
+local killersSection = Tabs.Main:AddSection("Assassinos")
+
+killersSection:AddToggle("KillerESP", {
+    Title = "ESP Assassino",
+    Default = false,
+    Callback = function(bool)
+        _G.killers = bool
+        task.spawn(function()
+            while task.wait() do
+                if _G.killers == true then
+                    for i, v in pairs(workspace.Players.Killers:GetChildren()) do
+                        if not v:FindFirstChild("iskiddedfromneptz") then
+                            local hl = Instance.new("Highlight", v)
+                            hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                            hl.Name = "iskiddedfromneptz"
+                        end
+                    end
+                else
+                    for i, v in pairs(workspace.Players.Killers:GetChildren()) do
+                        if v:FindFirstChild("iskiddedfromneptz") then
+                            v.iskiddedfromneptz:Destroy()
+                        end
+                    end
+                    break
+                end
+            end
+        end)
+    end
+})
+
+-- Seção Sobreviventes
+local survivorsSection = Tabs.Main:AddSection("Sobreviventes")
+
+survivorsSection:AddToggle("SurvivorsESP", {
+    Title = "ESP Sobreviventes",
+    Default = false,
+    Callback = function(bool)
+        _G.survivors = bool
+        task.spawn(function()
+            while task.wait() do
+                if _G.survivors == true then
+                    for i, v in pairs(workspace.Players.Survivors:GetChildren()) do
+                        if not v:FindFirstChild("iskiddedfromneptz") then
+                            local hl = Instance.new("Highlight", v)
+                            hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                            hl.Name = "iskiddedfromneptz"
+                            hl.FillColor = Color3.fromRGB(0, 0, 255)
+                        end
+                    end
+                else
+                    for i, v in pairs(workspace.Players.Survivors:GetChildren()) do
+                        if v:FindFirstChild("iskiddedfromneptz") then
+                            v.iskiddedfromneptz:Destroy()
+                        end
+                    end
+                    break
+                end
+            end
+        end)
+    end
+})
+
+survivorsSection:AddToggle("AutoCoinFlip", {
+    Title = "Auto Coin Flip",
+    Default = false,
+    Callback = function(cool)
+        _G.coin = cool
+        task.spawn(function()
+            while _G.coin and task.wait(2.1) do
+                game:GetService("ReplicatedStorage"):WaitForChild("Modules"):WaitForChild("Network"):WaitForChild("RemoteEvent"):FireServer("UseActorAbility", "CoinFlip")
+            end
+        end)
+    end
+})
+
+-- Seção Itens
+local itemsSection = Tabs.Main:AddSection("Itens")
+
+itemsSection:AddToggle("ItemsESP", {
+    Title = "ESP Itens",
+    Default = false,
+    Callback = function(bool)
+        _G.items = bool
+        task.spawn(function()
+            while task.wait() do
+                if _G.items == true then
+                    pcall(function()
+                        for i, v in pairs(workspace.Map.Ingame:GetDescendants()) do
+                            if v:IsA("Tool") and not v:FindFirstChild("iskiddedfromneptz") then
+                                local hl = Instance.new("Highlight", v)
+                                hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                                hl.Name = "iskiddedfromneptz"
+                                hl.FillColor = Color3.fromRGB(0, 255, 255)
+                            end
+                        end
+                    end)
+                else
+                    pcall(function()
+                        for i, v in pairs(workspace.Map.Ingame.Map:GetChildren()) do
+                            if v:IsA("Tool") and v:FindFirstChild("iskiddedfromneptz") then
+                                v.iskiddedfromneptz:Destroy()
+                            end
+                        end
+                    end)
+                    break
+                end
+            end
+        end)
+    end
+})
+
+itemsSection:AddToggle("AutoPickUpItems", {
+    Title = "Pegar Itens Próximos [📜]",
+    Default = false,
+    Callback = function(call)
+        _G.pickUpNear = call
+        task.spawn(function()
+            while _G.pickUpNear and task.wait() do
+                pcall(function()
+                    if isKiller then return end
+                    local items = {}
+                    for i, v in pairs(workspace.Map.Ingame:GetDescendants()) do
+                        if v:IsA("Tool") then
+                            table.insert(items, v.ItemRoot)
+                        end
+                    end
+                    for i, v in pairs(items) do
+                        local magnitude = (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - v.Position).magnitude
+                        if magnitude <= 10 then
+                            fireproximityprompt(v.ProximityPrompt)
+                        end
+                    end
+                end)
+            end
+        end)
+    end
+})
+
+itemsSection:AddButton({
+    Title = "Coletar Todos os Itens [📜]",
+    Callback = function()
+        pcall(function()
+            if isKiller then return end
+            local items = {}
+            for i, v in pairs(workspace.Map.Ingame:GetDescendants()) do
+                if v:IsA("Tool") then
+                    table.insert(items, v.ItemRoot)
+                end
+            end
+            for i, v in pairs(items) do
+                if game.Players.LocalPlayer.Backpack:FindFirstChild(v.Parent.Name) then continue end
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v.CFrame
+                task.wait(0.5)
+                fireproximityprompt(v.ProximityPrompt)
+            end
+        end)
+    end
+})
+
+-- Seção Aimbot
+local aimbotSection = Tabs.Main:AddSection("Aimbot")
+local aimbotHeld = false
+local uis = game:GetService("UserInputService")
+
+uis.InputBegan:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton2 then
+        aimbotHeld = true
+    end
+end)
+
+uis.InputEnded:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton2 then
+        aimbotHeld = false
+    end
+end)
+
+aimbotSection:AddToggle("Aimbot", {
+    Title = "Aimbot [💻]",
+    Default = false,
+    Callback = function(bool)
+        _G.aimbot = bool
+        if bool then
+            Fluent:Notify({
+                Title = "Aimbot Ativado",
+                Content = "Segure botão direito para mirar nos alvos",
+                Duration = 3
+            })
+        end
+        task.spawn(function()
+            while _G.aimbot do
+                if aimbotHeld then
+                    local __DEBUG_FAKEKILLER = false
+                    local cam = workspace.CurrentCamera
+                    if isKiller or __DEBUG_FAKEKILLER then
+                        local mouse = game.Players.LocalPlayer:GetMouse()
+                        local x, y = mouse.X, mouse.Y
+                        local v = getClosestSurvivorToMouse(x, y)
+                        if v then
+                            local root = v.HumanoidRootPart
+                            cam.CFrame = CFrame.new(cam.CFrame.Position, root.Position)
+                        end
+                    elseif isSurvivor then
+                        if killerModel and ({cam:worldToViewportPoint(killerModel.HumanoidRootPart.Position)})[2] then
+                            cam.CFrame = CFrame.new(cam.CFrame.Position, killerModel.HumanoidRootPart.Position)
+                        end
+                    end
+                end
+                task.wait()
+            end
+        end)
+    end
+})
+
+-- ABA ASSASSINO
+local killerSection = Tabs.Killer:AddSection("Funcionalidades do Assassino")
+
+killerSection:AddToggle("AllowKillerEntrances", {
+    Title = "Usar Entradas do Assassino",
+    Default = false,
+    Callback = function(call)
+        _G.killerent = call
+        local function s9audioak()
+            local walls = workspace.Map.Ingame.Map:FindFirstChild("Killer_Only Wall") or workspace.Map.Ingame.Map:FindFirstChild("KillerOnlyEntrances")
+            if walls then
+                for i, v in pairs(walls:GetChildren()) do
+                    v.CanCollide = true
+                end
+            end
+        end
+        if not _G.killerent then
+            pcall(s9audioak)
+            return
+        end
+        task.spawn(function()
+            while _G.killerent and task.wait() do
+                if not workspace.Map.Ingame:FindFirstChild("Map") then continue end
+                local walls = workspace.Map.Ingame.Map:FindFirstChild("Killer_Only Wall") or workspace.Map.Ingame.Map:FindFirstChild("KillerOnlyEntrances")
+                if not walls then continue end
+                if not _G.killerent then
+                    pcall(s9audioak)
+                    break
+                end
+                pcall(function()
+                    for i, v in pairs(walls:GetChildren()) do
+                        v.CanCollide = false
+                    end
+                end)
+            end
+        end)
+    end
+})
+
+killerSection:AddToggle("SpectateKiller", {
+    Title = "Espectar o Assassino",
+    Default = false,
+    Callback = function(state)
+        if state then
+            local killer = workspace.Players.Killers:GetChildren()[1]
+            if killer then
+                workspace.CurrentCamera.CameraSubject = killer
+            end
+        else
+            pcall(function()
+                workspace.CurrentCamera.CameraSubject = game.Players.LocalPlayer.Character
+            end)
+        end
+    end
+})
+
+killerSection:AddButton({
+    Title = "Teleportar para o Assassino",
+    Callback = function()
+        local killer = workspace.Players.Killers:GetChildren()[1]
+        if killer then
+            pcall(function()
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = killer.PrimaryPart.CFrame
+            end)
+        end
+    end
+})
+
+
+killerSection:AddButton({
+    Title = "Matar Todo Mundo [KILLER TEAM]",
+    Callback = function()
+        if game.Players.LocalPlayer:GetNetworkPing() >= 0.3 then
+            return Fluent:Notify({
+                Title = "Kill All Stopped",
+                Content = "Kill all stopped because your ping is too high. Try getting better wifi and try again",
+                Duration = 5
+            })
+        end
+        for i, v in pairs(workspace.Players.Survivors:GetChildren()) do
+            local name = v:GetAttribute("Username")
+            local plr = game.Players:FindFirstChild(name)
+            if not plr then continue end
+            local skipTimeout = tick()
+            while tick() - skipTimeout <= 15 do
+                if game.Players.LocalPlayer:GetNetworkPing() >= 0.3 then
+                    return Fluent:Notify({
+                        Title = "Kill All Stopped",
+                        Content = "Kill all stopped because your ping is too high. Try getting better wifi and try again",
+                        Duration = 5
+                    })
+                end
+                if game.Players:FindFirstChild(name) == nil then break end
+                if plr.Character == nil then break end
+                if plr.Character:FindFirstChild("Humanoid") == nil then break end
+                if plr.Character.Humanoid.Health <= 0 then break end
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = plr.Character.HumanoidRootPart.CFrame
+                game:GetService("ReplicatedStorage"):WaitForChild("Modules"):WaitForChild("Network"):WaitForChild("RemoteEvent"):FireServer("UseActorAbility", "Slash")
+                game:GetService("ReplicatedStorage"):WaitForChild("Modules"):WaitForChild("Network"):WaitForChild("RemoteEvent"):FireServer("UseActorAbility", "Punch")
+                task.wait()
+            end
+        end
+    end
+})
+
+killerSection:AddButton({
+    Title = "Teleportar Para Sobrevivente Aleatorio",
+    Callback = function()
+        pcall(function()
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = workspace.Players.Survivors:GetChildren()[math.random(1, #workspace.Players.Survivors:GetChildren())].HumanoidRootPart.CFrame
+        end)
+    end
+})
+
+-- ABA LOCAL PLAYER
+local staminaSection = Tabs.Player:AddSection("Stamina")
+
+staminaSection:AddButton({
+    Title = "Estamina Infinita [📜]",
+    Callback = function()
+        require(game:GetService("ReplicatedStorage").Systems.Character.Game.Sprinting).DefaultConfig.MaxStamina = 9999
+        require(game:GetService("ReplicatedStorage").Systems.Character.Game.Sprinting).DefaultConfig.StaminaLoss = 0
+        Fluent:Notify({
+            Title = "Warning",
+            Content = "This effect won't apply until next round, but you only have to press it once this entire session",
+            Duration = 5
+        })
+    end
+})
+
+staminaSection:AddToggle("AlwaysSprint", {
+    Title = "Sempre Correr [📜]",
+    Default = false,
+    Callback = function(call)
+        _G.alwaysSprint = call
+        task.spawn(function()
+            while _G.alwaysSprint and task.wait() do
+                local sprint = require(game:GetService("ReplicatedStorage").Systems.Character.Game.Sprinting)
+                if not sprint.IsSprinting then
+                    sprint.IsSprinting = true
+                    sprint.__sprintedEvent:Fire(true)
+                end
+            end
+        end)
+    end
+})
+
+local sprintSpeed = 26
+staminaSection:AddToggle("FastSprint", {
+    Title = "Correr Rápido [⚙] [⚠] [📜]",
+    Default = false,
+    Callback = function(call)
+        _G.fsprint = call
+        if call then
+            Fluent:Notify({
+                Title = "KICK WARNING",
+                Content = "This feature can get you kicked, and is EXTREMELY risky!",
+                Duration = 5
+            })
+        end
+    end
+})
+
+task.spawn(function()
+    local sprint = require(game:GetService("ReplicatedStorage").Systems.Character.Game.Sprinting)
+    while true do
+        if _G.fsprint then
+            sprint.SprintSpeed = sprintSpeed
+        else
+            sprint.SprintSpeed = 26
+        end
+        task.wait()
+    end
+end)
+
+staminaSection:AddSlider("SprintSpeed", {
+    Title = "Sprint Speed",
+    Default = 26,
+    Min = 26,
+    Max = 80,
+    Rounding = 1,
+    Callback = function(slid)
+        sprintSpeed = slid
+    end
+})
+
+local speedSection = Tabs.Player:AddSection("Speed")
+local yeahvariable = 0
+
+speedSection:AddSlider("SpeedSlider", {
+    Title = "Speed (Bypass)",
+    Default = 16,
+    Min = 16,
+    Max = 100,
+    Rounding = 1,
+    Callback = function(s)
+        yeahvariable = s
+    end
+})
+
+speedSection:AddToggle("SpeedToggle", {
+    Title = "Speed Hack",
+    Default = false,
+    Callback = function(s)
+        _G.mhhmmm = s
+        task.spawn(function()
+            local localPlayer = game:GetService("Players").LocalPlayer
+            while task.wait() do
+                if not _G.mhhmmm then break end
+                local humanoid = localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid")
+                if humanoid and humanoid.MoveDirection ~= Vector3.zero then
+                    localPlayer.Character:TranslateBy(humanoid.MoveDirection * yeahvariable * game:GetService("RunService").RenderStepped:Wait())
+                end
+            end
+        end)
+    end
+})
+
+local noclipSection = Tabs.Player:AddSection("Noclip")
+noclipSection:AddToggle("Noclip", {
+    Title = "Ativar Wallhack [Noclip] [⚠]",
+    Default = false,
+    Callback = function(s)
+        if s == true then
+            Fluent:Notify({
+                Title = "KICK WARNING",
+                Content = "You WILL get kicked if you are inside a wall for more than a second! Only use for small shortcuts",
+                Duration = 5
+            })
+        end
+        _G.nokia = s
+        local cachey = {}
+        task.spawn(function()
+            local localPlayer = game:GetService("Players").LocalPlayer
+            while task.wait() do
+                if not _G.nokia then
+                    for i, v in pairs(cachey) do
+                        v.CanCollide = true
+                    end
+                    break
+                end
+                if localPlayer.Character then
+                    for i, v in pairs(localPlayer.Character:GetChildren()) do
+                        if v:IsA("BasePart") then
+                            cachey[v] = v
+                            v.CanCollide = false
+                        end
+                    end
+                end
+            end
+        end)
+    end
+})
+
+local jumpSection = Tabs.Player:AddSection("Infinite Jump")
+jumpSection:AddToggle("InfiniteJump", {
+    Title = "Pulo Infinito",
+    Default = false,
+    Callback = function(s)
+        if s == false then
+            return _G.connection:Disconnect()
+        end
+        _G.connection = game:GetService("UserInputService").JumpRequest:Connect(function()
+            pcall(function()
+                game.Players.LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+            end)
+        end)
+    end
+})
+
+-- ABA TELEPORT
+local generatorsTeleportSection = Tabs.Teleport:AddSection("Generators")
+
+for i = 1, 5 do
+    generatorsTeleportSection:AddButton({
+        Title = "Teleportar Para o gerador " .. i,
+        Callback = function()
+            pcall(function()
+                local gens = {}
+                for i, v in pairs(workspace.Map.Ingame.Map:GetChildren()) do
+                    if v.Name == "Generator" then
+                        table.insert(gens, v)
+                    end
+                end
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = gens[i].Positions.Center.CFrame + Vector3.new(0, 10, 0)
+            end)
+        end
+    })
+end
+
+local itemsTeleportSection = Tabs.Teleport:AddSection("Items")
+itemsTeleportSection:AddButton({
+    Title = "Teleport To Random Item",
+    Callback = function()
+        local items = {}
+        pcall(function()
+            for i, v in pairs(workspace.Map.Ingame:GetDescendants()) do
+                if v:IsA("Tool") then
+                    table.insert(items, v)
+                end
+            end
+        end)
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = items[math.random(1, #items)].ItemRoot.CFrame + Vector3.new(0, 10, 0)
+    end
+})
+
+-- ABA MISC
+local miscSection = Tabs.Misc:AddSection("Miscellaneous")
+
+miscSection:AddToggle("AllowJump", {
+    Title = "Allow Jump [⚠]",
+    Default = false,
+    Callback = function(s)
+        _G.mhhmmm2 = s
+        if s then
+            Fluent:Notify({
+                Title = "KICK WARNING",
+                Content = "WARNING jumping repeatedly will KICK YOU because the game will think you are flying!",
+                Duration = 5
+            })
+        end
+        task.spawn(function()
+            local localPlayer = game:GetService("Players").LocalPlayer
+            while task.wait() do
+                if not _G.mhhmmm2 then break end
+                local humanoid = localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid")
+                if humanoid then
+                    humanoid.JumpPower = 50
+                end
+            end
+        end)
+    end
+})
+
+miscSection:AddButton({
+    Title = "No Fog",
+    Callback = function()
+        for i, v in pairs(game.Lighting:GetDescendants()) do
+            if not v:IsA("Atmosphere") then continue end
+            v:Destroy()
+        end
+        game.Lighting.FogEnd = 999999
+    end
+})
+
+miscSection:AddButton({
+    Title = "Kill Yourself",
+    Callback = function()
+        pcall(function()
+            game.Players.LocalPlayer.Character:BreakJoints()
+        end)
+    end
+})
+
+miscSection:AddButton({
+    Title = "Rejoin",
+    Callback = function()
+        pcall(function()
+            game:GetService("TeleportService"):Teleport(game.PlaceId, game.Players.localPlayer)
+        end)
+    end
+})
+
+local popupsSection = Tabs.Misc:AddSection("Popups")
+popupsSection:AddToggle("AutoRemove1x1x1x1", {
+    Title = "Auto Remove 1x1x1x1 popups",
+    Default = false,
+    Callback = function(bool)
+        _G.no1x = bool
+        task.spawn(function()
+            while _G.no1x and task.wait() do
+                local temp = game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("TemporaryUI")
+                if temp and temp:FindFirstChild("1x1x1x1Popup") then
+                    temp["1x1x1x1Popup"]:Destroy()
+                    warn("yes its gone")
+                end
+            end
+        end)
+    end
+})
+
+local emoteSection = Tabs.Misc:AddSection("Emote As Killer")
+local emoteName = "AICatDance"
+local emoteTable = {}
+
+for i, v in pairs(game:GetService("ReplicatedStorage").Assets.Emotes:GetChildren()) do
+    table.insert(emoteTable, v.Name)
+end
+table.sort(emoteTable)
+
+emoteSection:AddDropdown("EmoteDropdown", {
+    Title = "Select Emote (must own)",
+    Values = emoteTable,
+    Multi = false,
+    Default = 1,
+    Callback = function(e)
+        emoteName = e
+    end
+})
+
+emoteSection:AddButton({
+    Title = "Play Emote",
+    Callback = function()
+        game:GetService("ReplicatedStorage"):WaitForChild("Modules"):WaitForChild("Network"):WaitForChild("RemoteEvent"):FireServer("PlayEmote", "Animations", emoteName)
+    end
+})
+
+-- Notificação inicial
+Fluent:Notify({
+    Title = "99 Nights Script Loaded",
+    Content = "Script loaded successfully! Made by neptunescripts",
+    Duration = 3
+})
+
+-- Save Manager e Interface Manager
+SaveManager:SetLibrary(Fluent)
+InterfaceManager:SetLibrary(Fluent)
+SaveManager:IgnoreThemeSettings()
+SaveManager:SetIgnoreIndexes({})
+
+-- Selecionar primeira aba
+Window:SelectTab(1)
