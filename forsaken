@@ -1,5 +1,3 @@
-
--- 99 Nights Script com Fluent UI
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/jhowmodderxxxx/haxstore/refs/heads/main/savemanagerhax"))()
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/jhowmodderxxxx/haxstore/refs/heads/main/interface"))()
@@ -13,9 +11,9 @@ getgenv().NXP_LOADED = true
 -- Criação da Window
 local Window = Fluent:CreateWindow({
     Title = "SOWxTEAM",
-    SubTitle = "By RodrigoGTyx | [NOLI 🎭] FORSAKEN | SCRIPT ATUALIZADO DIA 25/08/25",
+    SubTitle = "By RodrigoGTyx | [NOLI🎭] FORSAKEN | SCRIPT ATUALIZADO 25/08/25",
     TabWidth = 160,
-    Size = UDim2.fromOffset(550, 400),
+    Size = UDim2.fromOffset(590, 380),
     Acrylic = false,
     Theme = "Amethyst",
     MinimizeKey = Enum.KeyCode.LeftAlt
@@ -27,9 +25,12 @@ local UserInputService = game:GetService("UserInputService")
 local Player = game.Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
+-- Criação de um ScreenGui persistente
 local ClickButton = Instance.new("ScreenGui")
 ClickButton.Parent = PlayerGui
+ClickButton.ResetOnSpawn = false  -- Impede que o ScreenGui desapareça quando o personagem for resetado
 
+-- Criação do Frame com o botão flutuante
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "LogoButton"
 MainFrame.Parent = ClickButton
@@ -63,7 +64,31 @@ ImageLabel.Size = UDim2.new(1, 20, 1, 20)
 ImageLabel.Image = "rbxassetid://125930606242191"
 ImageLabel.ZIndex = 1
 
-task.wait(0.1)
+-- Movimentação do botão flutuante (drag)
+local dragging = false
+local dragInput, mousePos, framePos
+
+TextButton.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        mousePos = input.Position
+        framePos = MainFrame.Position
+    end
+end)
+
+TextButton.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging then
+        local delta = input.Position - mousePos
+        MainFrame.Position = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X, framePos.Y.Scale, framePos.Y.Offset + delta.Y)
+    end
+end)
 
 -- Logo grande
 local Logo = Instance.new("ImageLabel")
@@ -679,18 +704,43 @@ killerSection:AddButton({
 -- ABA LOCAL PLAYER
 local staminaSection = Tabs.Player:AddSection("Stamina")
 
-staminaSection:AddButton({
+staminaSection:AddToggle("InfiniteStamina", {
     Title = "Estamina Infinita [📜]",
-    Callback = function()
-        require(game:GetService("ReplicatedStorage").Systems.Character.Game.Sprinting).DefaultConfig.MaxStamina = 9999
-        require(game:GetService("ReplicatedStorage").Systems.Character.Game.Sprinting).DefaultConfig.StaminaLoss = 0
+    Default = false,
+    Callback = function(call)
+        _G.infiniteStamina = call  -- Atualiza o estado do toggle
+        task.spawn(function()
+            while _G.infiniteStamina do
+                task.wait(0.1)  -- Pequeno delay para evitar sobrecarga do loop
+
+                local sprintingSystem = require(game:GetService("ReplicatedStorage").Systems.Character.Game.Sprinting)
+                
+                -- Repor estamina para 9999
+                sprintingSystem.DefaultConfig.MaxStamina = 9999
+                sprintingSystem.DefaultConfig.StaminaLoss = 0
+                sprintingSystem.DefaultConfig.CurrentStamina = 9999
+            end
+        end)
+    end
+})
+
+-- Notificação de ativação/desativação
+game:GetService("Players").LocalPlayer.CharacterAdded:Connect(function()
+    if _G.infiniteStamina then
         Fluent:Notify({
-            Title = "Warning",
-            Content = "This effect won't apply until next round, but you only have to press it once this entire session",
+            Title = "Estamina Infinita Ativada",
+            Content = "Sua estamina está sendo continuamente reposta para 9999.",
+            Duration = 5
+        })
+    else
+        Fluent:Notify({
+            Title = "Estamina Infinita Desativada",
+            Content = "Sua estamina voltou ao normal.",
             Duration = 5
         })
     end
-})
+end)
+
 
 staminaSection:AddToggle("AlwaysSprint", {
     Title = "Sempre Correr [📜]",
@@ -718,7 +768,6 @@ staminaSection:AddToggle("FastSprint", {
         if call then
             Fluent:Notify({
                 Title = "KICK WARNING",
-                Content = "This feature can get you kicked, and is EXTREMELY risky!",
                 Duration = 5
             })
         end
@@ -788,7 +837,6 @@ noclipSection:AddToggle("Noclip", {
         if s == true then
             Fluent:Notify({
                 Title = "KICK WARNING",
-                Content = "You WILL get kicked if you are inside a wall for more than a second! Only use for small shortcuts",
                 Duration = 5
             })
         end
@@ -816,24 +864,8 @@ noclipSection:AddToggle("Noclip", {
     end
 })
 
-local jumpSection = Tabs.Player:AddSection("Infinite Jump")
-jumpSection:AddToggle("InfiniteJump", {
-    Title = "Pulo Infinito",
-    Default = false,
-    Callback = function(s)
-        if s == false then
-            return _G.connection:Disconnect()
-        end
-        _G.connection = game:GetService("UserInputService").JumpRequest:Connect(function()
-            pcall(function()
-                game.Players.LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-            end)
-        end)
-    end
-})
-
 -- ABA TELEPORT
-local generatorsTeleportSection = Tabs.Teleport:AddSection("Generators")
+local generatorsTeleportSection = Tabs.Teleport:AddSection("Geradores")
 
 for i = 1, 5 do
     generatorsTeleportSection:AddButton({
@@ -854,7 +886,7 @@ end
 
 local itemsTeleportSection = Tabs.Teleport:AddSection("Items")
 itemsTeleportSection:AddButton({
-    Title = "Teleport To Random Item",
+    Title = "Teleportar para itens aleatorio",
     Callback = function()
         local items = {}
         pcall(function()
@@ -869,32 +901,8 @@ itemsTeleportSection:AddButton({
 })
 
 -- ABA MISC
-local miscSection = Tabs.Misc:AddSection("Miscellaneous")
+local miscSection = Tabs.Misc:AddSection("Outros")
 
-miscSection:AddToggle("AllowJump", {
-    Title = "Allow Jump [⚠]",
-    Default = false,
-    Callback = function(s)
-        _G.mhhmmm2 = s
-        if s then
-            Fluent:Notify({
-                Title = "KICK WARNING",
-                Content = "WARNING jumping repeatedly will KICK YOU because the game will think you are flying!",
-                Duration = 5
-            })
-        end
-        task.spawn(function()
-            local localPlayer = game:GetService("Players").LocalPlayer
-            while task.wait() do
-                if not _G.mhhmmm2 then break end
-                local humanoid = localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid")
-                if humanoid then
-                    humanoid.JumpPower = 50
-                end
-            end
-        end)
-    end
-})
 
 miscSection:AddButton({
     Title = "No Fog",
@@ -908,16 +916,7 @@ miscSection:AddButton({
 })
 
 miscSection:AddButton({
-    Title = "Kill Yourself",
-    Callback = function()
-        pcall(function()
-            game.Players.LocalPlayer.Character:BreakJoints()
-        end)
-    end
-})
-
-miscSection:AddButton({
-    Title = "Rejoin",
+    Title = "Reconectar",
     Callback = function()
         pcall(function()
             game:GetService("TeleportService"):Teleport(game.PlaceId, game.Players.localPlayer)
@@ -927,7 +926,7 @@ miscSection:AddButton({
 
 local popupsSection = Tabs.Misc:AddSection("Popups")
 popupsSection:AddToggle("AutoRemove1x1x1x1", {
-    Title = "Auto Remove 1x1x1x1 popups",
+    Title = "Auto Remover Efeito de tela do 1x1x1x1",
     Default = false,
     Callback = function(bool)
         _G.no1x = bool
@@ -943,36 +942,10 @@ popupsSection:AddToggle("AutoRemove1x1x1x1", {
     end
 })
 
-local emoteSection = Tabs.Misc:AddSection("Emote As Killer")
-local emoteName = "AICatDance"
-local emoteTable = {}
-
-for i, v in pairs(game:GetService("ReplicatedStorage").Assets.Emotes:GetChildren()) do
-    table.insert(emoteTable, v.Name)
-end
-table.sort(emoteTable)
-
-emoteSection:AddDropdown("EmoteDropdown", {
-    Title = "Select Emote (must own)",
-    Values = emoteTable,
-    Multi = false,
-    Default = 1,
-    Callback = function(e)
-        emoteName = e
-    end
-})
-
-emoteSection:AddButton({
-    Title = "Play Emote",
-    Callback = function()
-        game:GetService("ReplicatedStorage"):WaitForChild("Modules"):WaitForChild("Network"):WaitForChild("RemoteEvent"):FireServer("PlayEmote", "Animations", emoteName)
-    end
-})
-
 -- Notificação inicial
 Fluent:Notify({
-    Title = "99 Nights Script Loaded",
-    Content = "Script loaded successfully! Made by neptunescripts",
+    Title = "Forsaken Script Loaded",
+    Content = "Script loaded successfully! Made by RodrigoGTyx",
     Duration = 3
 })
 
