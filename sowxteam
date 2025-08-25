@@ -667,7 +667,7 @@ end)
 
 local Window = Fluent:CreateWindow({
     Title = "SOWxTEAM",
-    SubTitle = "By RodrigoGTyx | VOX SEAS | SCRIPT ATUALIZADO DIA 22/08/25",
+    SubTitle = "By RodrigoGTyx | VOX SEAS | SCRIPT ATUALIZADO DIA 25/08/25",
     TabWidth = 160,
     Size = UDim2.fromOffset(520, 350),
     Acrylic = false,
