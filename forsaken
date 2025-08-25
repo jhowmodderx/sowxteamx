@@ -13,9 +13,9 @@ getgenv().NXP_LOADED = true
 -- Criação da Window
 local Window = Fluent:CreateWindow({
     Title = "SOWxTEAM",
-    SubTitle = "By RodrigoGTyx | [NOLI 🎭] FORSAKEN | SCRIPT ATUALIZADO DIA 24/08/25",
+    SubTitle = "By RodrigoGTyx | [NOLI 🎭] FORSAKEN | SCRIPT ATUALIZADO DIA 25/08/25",
     TabWidth = 160,
-    Size = UDim2.fromOffset(580, 460),
+    Size = UDim2.fromOffset(500, 320),
     Acrylic = false,
     Theme = "Amethyst",
     MinimizeKey = Enum.KeyCode.LeftAlt
