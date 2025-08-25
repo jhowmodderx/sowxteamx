@@ -9,7 +9,7 @@ local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.
 
 local Window = Fluent:CreateWindow({
     Title = "SOWxTEAM",
-    SubTitle = "By RodrigoGTyx | FISCH | SCRIPT ATUALIZADO DIA 23/08/25",
+    SubTitle = "By RodrigoGTyx | FISCH | SCRIPT ATUALIZADO DIA 25/08/25",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
     Acrylic = false,
@@ -365,22 +365,47 @@ local farmSpots = {
     {"LOCAL #4 (ÓTIMO)", CFrame.new(-3844.12, -563.34, 1068.31)}
 }
 
+-- Supondo que LocalPlayer seja uma variável global ou já definida
+local player = game.Players.LocalPlayer -- Garantindo que estamos pegando o jogador corretamente
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+
+-- Criando uma tabela apenas com os nomes dos locais para o dropdown
+local farmSpotsNames = {}
 for _, spot in ipairs(farmSpots) do
-    TeleportTab:AddButton({
-        Title = spot[1],
-        Description = "Teleportar para local de farm",
-        Callback = function()
+    table.insert(farmSpotsNames, spot[1])
+end
+
+-- Adicionando o Dropdown para escolha do local
+TeleportTab:AddDropdown("farmSpotsDropdown", {
+    Title = "Locais de Farm",
+    Values = farmSpotsNames,
+    Multi = false,  -- Um único local pode ser selecionado
+    Default = 1,  -- O primeiro local será selecionado por padrão
+    Callback = function(selectedValue)
+        -- Encontrando o CFrame baseado na escolha do dropdown
+        local selectedSpot
+        for _, spot in ipairs(farmSpots) do
+            if spot[1] == selectedValue then
+                selectedSpot = spot[2]
+                break
+            end
+        end
+
+        -- Teleportando para o local selecionado
+        if selectedSpot then
             pcall(function()
-                LocalPlayer.Character.HumanoidRootPart.CFrame = spot[2]
+                humanoidRootPart.CFrame = selectedSpot
                 Fluent:Notify({
                     Title = "Teleporte",
-                    Content = "Teleportado para " .. spot[1],
+                    Content = "Teleportado para " .. selectedValue,
                     Duration = 3
                 })
             end)
         end
-    })
-end
+    end
+})
+
 
 TeleportTab:AddButton({
     Title = "JACK MARROW",
@@ -420,37 +445,50 @@ TeleportTab:AddButton({
 
 
 
--- 📦 VENDER INVENTÁRIO
+-- 📦 VENDER ITENS OU PEIXES
+MainTab:AddSection("Vender Itens ou Peixes")
+
+-- Dropdown para selecionar o tipo de venda
+local sellOptions = {"Vender Tudo", "Vender Peixes (Mão)"}
+local selectedOption = sellOptions[1]  -- Definindo a opção inicial como "Vender Tudo"
+
+local sellDropdown = MainTab:AddDropdown("SellDropdown", {
+    Title = "Escolha o tipo de venda",
+    Values = sellOptions,
+    Multi = false,
+    Default = 1,
+})
+
+-- Atualiza a variável selectedOption quando o dropdown é alterado
+sellDropdown:OnChanged(function(v)
+    selectedOption = v
+end)
+
+-- Botão para realizar a venda com base na opção selecionada
 MainTab:AddButton({
-    Title = "📦 VENDER INVENTÁRIO",
-    Description = "Vender todos os itens do inventário",
+    Title = "Vender Seleção",
+    Description = "Vender de acordo com a opção selecionada",
     Callback = function()
         pcall(function()
-            ReplicatedStorage.events.SellAll:InvokeServer()
-            Fluent:Notify({
-                Title = "Venda",
-                Content = "Inventário vendido!",
-                Duration = 3
-            })
+            if selectedOption == "Vender Tudo" then
+                ReplicatedStorage.events.SellAll:InvokeServer()
+                Fluent:Notify({
+                    Title = "Venda",
+                    Content = "Inventário vendido!",
+                    Duration = 3
+                })
+            elseif selectedOption == "Vender Peixes (Mão)" then
+                ReplicatedStorage.events.Sell:InvokeServer()
+                Fluent:Notify({
+                    Title = "Venda",
+                    Content = "Peixes vendidos!",
+                    Duration = 3
+                })
+            end
         end)
     end
 })
 
--- 🎣 VENDER PEIXES (MÃO)
-MainTab:AddButton({
-    Title = "🎣 VENDER PEIXES (MÃO)",
-    Description = "Vender apenas os peixes que estão na mão",
-    Callback = function()
-        pcall(function()
-            ReplicatedStorage.events.Sell:InvokeServer()
-            Fluent:Notify({
-                Title = "Venda",
-                Content = "Peixes vendidos!",
-                Duration = 3
-            })
-        end)
-    end
-})
 
 
 -- Teleporte para Jogadores
@@ -597,7 +635,7 @@ local HideUIToggle = MiscTab:AddToggle("HideUI", {
 })
 
 local FlySpeedSlider = PlayerTab:AddSlider("Velocidade do Voo", {
-    Title = "VELOCIDADE",
+    Title = "VELOCIDADE DE VOO",
     Default = 1,
     Min = 0,
     Max = 10,
@@ -880,20 +918,6 @@ local function doTeleport(targetCFrame, saveOriginVarName)
     end
 end
 
-local function goBack(saveOriginVarName)
-    local last = _G[saveOriginVarName]
-    if last then
-        pcall(function()
-            local char = LocalPlayer.Character
-            if char and char:FindFirstChild("HumanoidRootPart") then
-                char.HumanoidRootPart.CFrame = last
-            end
-        end)
-    else
-        Fluent:Notify({ Title = "Voltar", Content = "Nenhuma posição anterior salva!", Duration = 3 })
-    end
-end
-
 -- =========================
 -- 🔹 ROD TELEPORTS
 -- =========================
@@ -941,8 +965,8 @@ local _selectedRodName = _rodValues[1]
 local RodDropdown = TeleportTab:AddDropdown("RodDropdown", {
     Title = "Escolha o Rod",
     Values = _rodValues,
-    Multi = false,
-    Default = 1,
+    Multi = false,  -- Um único rod pode ser selecionado
+    Default = 1,   -- O primeiro rod será selecionado por padrão
 })
 RodDropdown:OnChanged(function(v) _selectedRodName = v end)
 
@@ -954,11 +978,6 @@ TeleportTab:AddButton({
         if cf then doTeleport(cf, "__RodLastOrigin") end
     end
 })
-TeleportTab:AddButton({
-    Title = "Voltar (Rod)",
-    Callback = function() goBack("__RodLastOrigin") end
-})
-
 -- =========================
 -- 🔹 ITEM TELEPORTS
 -- =========================
@@ -991,8 +1010,8 @@ local _selectedItemName = _itemValues[1]
 local ItemDropdown = TeleportTab:AddDropdown("ItemDropdown", {
     Title = "Escolha o Item",
     Values = _itemValues,
-    Multi = false,
-    Default = 1,
+    Multi = false,  -- Um único item pode ser selecionado
+    Default = 1,   -- O primeiro item será selecionado por padrão
 })
 ItemDropdown:OnChanged(function(v) _selectedItemName = v end)
 
@@ -1003,10 +1022,6 @@ TeleportTab:AddButton({
         local cf = itemTeleportLocations[_selectedItemName]
         if cf then doTeleport(cf, "__ItemLastOrigin") end
     end
-})
-TeleportTab:AddButton({
-    Title = "Voltar (Item)",
-    Callback = function() goBack("__ItemLastOrigin") end
 })
 
 -- =========================
@@ -1038,8 +1053,8 @@ local _selectedQuestName = _questValues[1]
 local QuestDropdown = TeleportTab:AddDropdown("QuestDropdown", {
     Title = "Escolha a Quest",
     Values = _questValues,
-    Multi = false,
-    Default = 1,
+    Multi = false,  -- Um único quest pode ser selecionado
+    Default = 1,   -- O primeiro quest será selecionado por padrão
 })
 QuestDropdown:OnChanged(function(v) _selectedQuestName = v end)
 
@@ -1050,10 +1065,6 @@ TeleportTab:AddButton({
         local cf = questTeleportLocations[_selectedQuestName]
         if cf then doTeleport(cf, "__QuestLastOrigin") end
     end
-})
-TeleportTab:AddButton({
-    Title = "Voltar (Quest)",
-    Callback = function() goBack("__QuestLastOrigin") end
 })
 
 -- =========================
@@ -1097,8 +1108,8 @@ local _selectedNpcName = _npcValues[1]
 local NpcDropdown = TeleportTab:AddDropdown("NpcDropdown", {
     Title = "Escolha o NPC",
     Values = _npcValues,
-    Multi = false,
-    Default = 1,
+    Multi = false,  -- Um único NPC pode ser selecionado
+    Default = 1,   -- O primeiro NPC será selecionado por padrão
 })
 NpcDropdown:OnChanged(function(v) _selectedNpcName = v end)
 
@@ -1110,10 +1121,6 @@ TeleportTab:AddButton({
         if cf then doTeleport(cf, "__NpcLastOrigin") end
     end
 })
-TeleportTab:AddButton({
-    Title = "Voltar (NPC)",
-    Callback = function() goBack("__NpcLastOrigin") end
-})
 
 
 HideUIToggle:OnChanged(function(value)
@@ -1122,6 +1129,12 @@ HideUIToggle:OnChanged(function(value)
         LocalPlayer.PlayerGui.hud.safezone.Visible = not value
     end
 end)
+
+
+-- =========================
+-- 🔹 ANTI AFK
+-- =========================
+MainTab:AddSection("Anti AFK")
 
 local AntiAFKToggle = MainTab:AddToggle("AntiAFK", {
     Title = "ANTI AFK",
