@@ -24,9 +24,18 @@ local UserInputService = game:GetService("UserInputService")
 local Player = game.Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
+-- Configuração do botão flutuante
+local DeviceType = game:GetService("UserInputService").TouchEnabled and "Mobile" or "PC"
+local UserInputService = game:GetService("UserInputService")
+local Player = game.Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+
+-- Criação de um ScreenGui persistente
 local ClickButton = Instance.new("ScreenGui")
 ClickButton.Parent = PlayerGui
+ClickButton.ResetOnSpawn = false  -- Impede que o ScreenGui desapareça quando o personagem for resetado
 
+-- Criação do Frame com o botão flutuante
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "LogoButton"
 MainFrame.Parent = ClickButton
@@ -46,7 +55,7 @@ TextButton.BackgroundColor3 = Color3.fromRGB(0, 255, 255)
 TextButton.BackgroundTransparency = 1
 TextButton.BorderSizePixel = 0
 TextButton.Size = UDim2.new(1, 0, 1, 0)
-TextButton.Text = ""  -- Oculta o texto para mostrar só o ícone
+TextButton.Text = ""
 TextButton.TextColor3 = Color3.fromRGB(170, 0, 255)
 TextButton.TextSize = 14
 TextButton.AutoButtonColor = false
@@ -56,12 +65,35 @@ ImageLabel.Parent = TextButton
 ImageLabel.AnchorPoint = Vector2.new(0.5, 0.5)
 ImageLabel.BackgroundTransparency = 1
 ImageLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
-ImageLabel.Size = UDim2.new(1, 20, 1, 20)  -- aumentei aqui
+ImageLabel.Size = UDim2.new(1, 20, 1, 20)
 ImageLabel.Image = "rbxassetid://125930606242191"
 ImageLabel.ZIndex = 1
 
+-- Movimentação do botão flutuante (drag)
+local dragging = false
+local dragInput, mousePos, framePos
 
+TextButton.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        mousePos = input.Position
+        framePos = MainFrame.Position
+    end
+end)
 
+TextButton.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging then
+        local delta = input.Position - mousePos
+        MainFrame.Position = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X, framePos.Y.Scale, framePos.Y.Offset + delta.Y)
+    end
+end)
 task.wait(0.1) -- Garante que a UI está pronta
 
 -- Adiciona a logo grande no fundo roxo vazio
