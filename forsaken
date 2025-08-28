@@ -11,7 +11,7 @@ getgenv().NXP_LOADED = true
 -- Criação da Window
 local Window = Fluent:CreateWindow({
     Title = "SOWxTEAM",
-    SubTitle = "By RodrigoGTyx | [NOLI🎭] FORSAKEN | SCRIPT ATUALIZADO 25/08/25",
+    SubTitle = "By RodrigoGTyx | [NOLI🎭] FORSAKEN | SCRIPT ATUALIZADO 28/08/25",
     TabWidth = 160,
     Size = UDim2.fromOffset(590, 380),
     Acrylic = false,
@@ -251,7 +251,7 @@ generatorsSection:AddToggle("Esp Geradores", {
 
 -- Generators Nametags
 generatorsSection:AddToggle("GeneratorsNametags", {
-    Title = "Tags dos Geradores",
+    Title = "% dos Geradores",
     Default = false,
     Callback = function(bool)
         _G.generatorstag = bool
@@ -582,45 +582,6 @@ aimbotSection:AddToggle("Aimbot", {
                     end
                 end
                 task.wait()
-            end
-        end)
-    end
-})
-
--- ABA ASSASSINO
-local killerSection = Tabs.Killer:AddSection("Funcionalidades do Assassino")
-
-killerSection:AddToggle("AllowKillerEntrances", {
-    Title = "Usar Entradas do Assassino",
-    Default = false,
-    Callback = function(call)
-        _G.killerent = call
-        local function s9audioak()
-            local walls = workspace.Map.Ingame.Map:FindFirstChild("Killer_Only Wall") or workspace.Map.Ingame.Map:FindFirstChild("KillerOnlyEntrances")
-            if walls then
-                for i, v in pairs(walls:GetChildren()) do
-                    v.CanCollide = true
-                end
-            end
-        end
-        if not _G.killerent then
-            pcall(s9audioak)
-            return
-        end
-        task.spawn(function()
-            while _G.killerent and task.wait() do
-                if not workspace.Map.Ingame:FindFirstChild("Map") then continue end
-                local walls = workspace.Map.Ingame.Map:FindFirstChild("Killer_Only Wall") or workspace.Map.Ingame.Map:FindFirstChild("KillerOnlyEntrances")
-                if not walls then continue end
-                if not _G.killerent then
-                    pcall(s9audioak)
-                    break
-                end
-                pcall(function()
-                    for i, v in pairs(walls:GetChildren()) do
-                        v.CanCollide = false
-                    end
-                end)
             end
         end)
     end
