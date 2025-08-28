@@ -589,8 +589,6 @@ aimbotSection:AddToggle("Aimbot", {
 
 -- ABA ASSASSINO
 local killerSection = Tabs.Killer:AddSection("Funcionalidades do Assassino")
-
-
 killerSection:AddToggle("SpectateKiller", {
     Title = "Espectar o Assassino",
     Default = false,
@@ -604,8 +602,9 @@ killerSection:AddToggle("SpectateKiller", {
             pcall(function()
                 workspace.CurrentCamera.CameraSubject = game.Players.LocalPlayer.Character
             end)
+
         end
-    end
+end
 })
 
 killerSection:AddButton({
