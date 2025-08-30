@@ -1,3 +1,16 @@
+--[[
+
+  RRRRR   OOOOO  DDDDD   RRRRR    III  GGGGG   OOOOO
+  R    R  O   O  D    D  R    R    I   G       O   O
+  RRRRR   O   O  D    D  RRRRR     I   G  GG   O   O
+  R   R   O   O  D    D  R   R     I   G   G   O   O
+  R    R  O O O  D    D  R    R   III  GGGGG   OOOOO
+
+
+--]]
+
+
+
 local PreloadConstants = {
 	PlaceVersionSupport = 4000,
 	BypassVersion = "V3",
@@ -9,7 +22,7 @@ local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.
 
 local Window = Fluent:CreateWindow({
     Title = "SOWxTEAM",
-    SubTitle = "By RodrigoGTyx | FISCH | SCRIPT ATUALIZADO DIA 25/08/25",
+    SubTitle = "By RodrigoGTyx | FISCH | SCRIPT ATUALIZADO DIA 30/08/25",
     TabWidth = 160,
     Size = UDim2.fromOffset(520, 350),
     Acrylic = false,
@@ -180,9 +193,9 @@ TextButton.MouseButton1Click:Connect(function()
 end)
 
 -- Criando as Tabs
-local MainTab = Window:AddTab({ Title = "Auto Farm", Icon = "settings" })
+local MainTab = Window:AddTab({ Title = "Auto Farm", Icon = "home" })
 local TeleportTab = Window:AddTab({ Title = "Teleportes", Icon = "navigation" })
-local PlayerTab = Window:AddTab({ Title = "Player", Icon = "user" })
+local PlayerTab = Window:AddTab({ Title = "Player", Icon = "lock" })
 local MiscTab = Window:AddTab({ Title = "Outros", Icon = "settings" })
 
 -- Configurações
@@ -394,7 +407,8 @@ local farmSpots = {
     {"LOCAL #1 (ÓTIMO)", CFrame.new(5802.14, 135.30, 403.35)},
     {"LOCAL #2 (ÓTIMO)", CFrame.new(-3842.70, 133.25, 340.56)},
     {"LOCAL #3 (ÓTIMO)", CFrame.new(-2024.93, 130.18, 557.97)},
-    {"LOCAL #4 (ÓTIMO)", CFrame.new(-3844.12, -563.34, 1068.31)}
+    {"LOCAL #4 (ÓTIMO)", CFrame.new(-3844.12, -563.34, 1068.31)},
+    {"LOCAL #5 (NOVO)", CFrame.new(567, 161, -1837)}
 }
 
 -- Supondo que LocalPlayer seja uma variável global ou já definida
@@ -410,7 +424,7 @@ end
 
 -- Adicionando o Dropdown para escolha do local
 TeleportTab:AddDropdown("farmSpotsDropdown", {
-    Title = "Locais de Farm",
+    Title = "LOCAIS DE FARM",
     Values = farmSpotsNames,
     Multi = false,  -- Um único local pode ser selecionado
     Default = 1,  -- O primeiro local será selecionado por padrão
@@ -477,6 +491,9 @@ TeleportTab:AddButton({
 
 
 
+
+
+
 -- 📦 VENDER ITENS OU PEIXES
 MainTab:AddSection("Vender Itens ou Peixes")
 
@@ -523,8 +540,17 @@ MainTab:AddButton({
 
 
 
--- Teleporte para Jogadores
 TeleportTab:AddSection("TELEPORTE PARA JOGADORES")
+
+local function UpdatePlayerList()
+    local playerList = {}
+    for _, player in pairs(Players:GetPlayers()) do
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            table.insert(playerList, player.Name)
+        end
+    end
+    return playerList
+end
 
 local PlayerDropdown = TeleportTab:AddDropdown("PlayerTeleport", {
     Title = "SELECIONE O JOGADOR",
@@ -536,15 +562,24 @@ local PlayerDropdown = TeleportTab:AddDropdown("PlayerTeleport", {
 PlayerDropdown:OnChanged(function(selected)
     if selected then
         local player = Players:FindFirstChild(selected)
-        if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            pcall(function()
-                LocalPlayer.Character.HumanoidRootPart.CFrame = player.Character.HumanoidRootPart.CFrame
+        if player then
+            local character = player.Character or player:WaitForChild("Character", 5)
+            if character and character:FindFirstChild("HumanoidRootPart") then
+                pcall(function()
+                    LocalPlayer.Character.HumanoidRootPart.CFrame = character.HumanoidRootPart.CFrame
+                    Fluent:Notify({
+                        Title = "Teleporte",
+                        Content = "Teleportado para " .. player.Name,
+                        Duration = 3
+                    })
+                end)
+            else
                 Fluent:Notify({
-                    Title = "Teleporte",
-                    Content = "Teleportado para " .. player.Name,
+                    Title = "Erro",
+                    Content = "O jogador não está pronto para teleportar.",
                     Duration = 3
                 })
-            end)
+            end
         end
     end
 end)
@@ -584,6 +619,7 @@ local InfiniteJumpToggle = PlayerTab:AddToggle("Infinite Jump Toggle", {
         end
     end
 })
+
 
 -- ABA: JOGADOR
 local FreezeToggle = PlayerTab:AddToggle("FreezePlayer", {
@@ -677,6 +713,9 @@ local FlySpeedSlider = PlayerTab:AddSlider("Velocidade do Voo", {
     end
 })
 
+
+
+
 local FlyToggle = PlayerTab:AddToggle("Fly", {
     Title = "VOAR",
     Default = false,
@@ -711,6 +750,8 @@ local FlyToggle = PlayerTab:AddToggle("Fly", {
         end)
     end
 })
+
+
 
 
 -- Flying Functions
@@ -1155,6 +1196,25 @@ TeleportTab:AddButton({
 })
 
 
+
+local DayOnly = PlayerTab:AddToggle("DayOnly", {
+    Title = "APENAS DE DIA (NOVO)",
+    Default = false
+})
+local DayOnlyLoop
+
+DayOnly:OnChanged(function(value)
+    if value then
+        DayOnlyLoop = RunService.Heartbeat:Connect(function()
+            game:GetService("Lighting").TimeOfDay = "12:00:00"
+        end)
+        Fluent:Notify({ Title = "Dia", Content = "Fixado em 12:00", Duration = 3 })
+    else
+        if DayOnlyLoop then DayOnlyLoop:Disconnect(); DayOnlyLoop = nil end
+        Fluent:Notify({ Title = "Dia", Content = "Tempo restaurado", Duration = 3 })
+    end
+end)
+
 HideUIToggle:OnChanged(function(value)
     Settings.HideUI = value
     if LocalPlayer.PlayerGui:FindFirstChild("hud") then
@@ -1162,6 +1222,61 @@ HideUIToggle:OnChanged(function(value)
     end
 end)
 
+
+MiscTab:AddSection("Opções De Server")
+
+MiscTab:AddToggle("Auto Hop Server", {
+    Title = "Auto Hop Server",
+    Default = false,
+    Callback = function(value)
+        if value then
+            -- Função para fazer o hop de servidor
+            local function hopToNewServer()
+                local TeleportService = game:GetService("TeleportService")
+                local HttpService = game:GetService("HttpService")
+                
+                -- Tentar encontrar um servidor com vaga
+                local success, servers = pcall(function()
+                    local response = HttpService:JSONDecode(game:HttpGetAsync(
+                        "https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Asc&limit=100"
+                    ))
+                    return response.data
+                end)
+                
+                if success and servers then
+                    local availableServers = {}
+                    for _, server in ipairs(servers) do
+                        if server.playing < server.maxPlayers and server.id ~= game.JobId then
+                            table.insert(availableServers, server.id)
+                        end
+                    end
+                    
+                    if #availableServers > 0 then
+                        local randomServer = availableServers[math.random(1, #availableServers)]
+                        TeleportService:TeleportToPlaceInstance(game.PlaceId, randomServer)
+                    else
+                        TeleportService:Teleport(game.PlaceId)
+                    end
+                else
+                    TeleportService:Teleport(game.PlaceId)
+                end
+            end
+            
+            -- Executa o hop imediatamente quando ativado
+            hopToNewServer()
+            
+            -- Conecta para continuar hopping enquanto o toggle estiver ativo
+            spawn(function()
+                while wait(5) and _ENV.AutoHopEnabled do
+                    hopToNewServer()
+                end
+            end)
+        else
+            -- Desativa o auto hop
+            _ENV.AutoHopEnabled = false
+        end
+    end
+})
 
 -- =========================
 -- 🔹 ANTI AFK
@@ -1191,81 +1306,6 @@ AntiAFKToggle:OnChanged(function(value)
 end)
 
 
--- COPIAR POSIÇÃO
-local CopyPosToggle = PlayerTab:AddButton("CopyPos", {
-    Title = "📍 COPIAR POSIÇÃO",
-    Default = false
-})
-
-CopyPosToggle:OnChanged(function(Value)
-    if Value then
-        local pos = LocalPlayer.Character.HumanoidRootPart.Position
-        setclipboard(string.format("CFrame.new(%.1f, %.1f, %.1f)", pos.X, pos.Y, pos.Z))
-        Fluent:Notify({
-            Title = "Posição",
-            Content = "Posição copiada para clipboard!",
-            Duration = 3
-        })
-        CopyPosToggle:SetValue(false)
-    end
-end)
-
-
-
--- Anti Kick / Anti Disconnect
-local ThirdPartyUserService = game:GetService("ThirdPartyUserService")
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-
--- Override de Kick
-if LocalPlayer then
-    -- Substitui a função Kick do jogador
-    local mt = getrawmetatable(game)
-    setreadonly(mt, false)
-    
-    local oldIndex = mt.__namecall
-    mt.__namecall = newcclosure(function(self, ...)
-        local args = {...}
-        local method = getnamecallmethod()
-        
-        if method == "Kick" then
-            warn("Tentativa de Kick bloqueada!")
-            return
-        end
-        
-        return oldIndex(self, ...)
-    end)
-    
-    setreadonly(mt, true)
-end
-
--- Também previne kicks via ThirdPartyUserService
-if ThirdPartyUserService then
-    ThirdPartyUserService.Kick:Connect(function(reason)
-        warn("ThirdPartyUserService tentou kicker você, mas foi bloqueado! Razão: "..tostring(reason))
-        -- Você pode até exibir uma notificação na tela se quiser
-        if game:GetService("Players").LocalPlayer then
-            game:GetService("Players").LocalPlayer:Kick("Bloqueado temporariamente pelo Anti-Kick")
-        end
-    end)
-end
-
-print("Anti-Kick ativo!")
-
-
--- Configurar SaveManager e InterfaceManager
-SaveManager:SetLibrary(Fluent)
-InterfaceManager:SetLibrary(Fluent)
-
--- Configurar pasta de save
-SaveManager:SetFolder("SOWxTEAM")
-
--- Configurar configurações que serão salvas
-SaveManager:BuildConfigSection(MiscTab)
-InterfaceManager:BuildInterfaceSection(MiscTab)
-
--- Carregar configurações
-SaveManager:LoadAutoloadConfig()
 
 -- Atualizar automaticamente quando um jogador entra/sai
 Players.PlayerAdded:Connect(function()
