@@ -173,11 +173,10 @@ VerifyBtn.MouseButton1Click:Connect(function()
     usedKeys[inputKey] = true
     notify("Sucesso", "✅ Key correta! Carregando o loader...", 5)
 
-    -- Carregar o script remotamente
-    task.wait(1)
+    -- Remover a tela de login após a verificação
     ScreenGui:Destroy()
 
-    -- Agora, carregue o script usando a chave inserida
+    -- Carregar o script remotamente
     local success, err = pcall(function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/jhowmodderx/sowxteamx/refs/heads/main/inicio"))()
     end)
