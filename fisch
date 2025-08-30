@@ -540,17 +540,8 @@ MainTab:AddButton({
 
 
 
+-- Teleporte para Jogadores
 TeleportTab:AddSection("TELEPORTE PARA JOGADORES")
-
-local function UpdatePlayerList()
-    local playerList = {}
-    for _, player in pairs(Players:GetPlayers()) do
-        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            table.insert(playerList, player.Name)
-        end
-    end
-    return playerList
-end
 
 local PlayerDropdown = TeleportTab:AddDropdown("PlayerTeleport", {
     Title = "SELECIONE O JOGADOR",
@@ -562,24 +553,15 @@ local PlayerDropdown = TeleportTab:AddDropdown("PlayerTeleport", {
 PlayerDropdown:OnChanged(function(selected)
     if selected then
         local player = Players:FindFirstChild(selected)
-        if player then
-            local character = player.Character or player:WaitForChild("Character", 5)
-            if character and character:FindFirstChild("HumanoidRootPart") then
-                pcall(function()
-                    LocalPlayer.Character.HumanoidRootPart.CFrame = character.HumanoidRootPart.CFrame
-                    Fluent:Notify({
-                        Title = "Teleporte",
-                        Content = "Teleportado para " .. player.Name,
-                        Duration = 3
-                    })
-                end)
-            else
+        if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            pcall(function()
+                LocalPlayer.Character.HumanoidRootPart.CFrame = player.Character.HumanoidRootPart.CFrame
                 Fluent:Notify({
-                    Title = "Erro",
-                    Content = "O jogador não está pronto para teleportar.",
+                    Title = "Teleporte",
+                    Content = "Teleportado para " .. player.Name,
                     Duration = 3
                 })
-            end
+            end)
         end
     end
 end)
@@ -596,7 +578,6 @@ TeleportTab:AddButton({
         })
     end
 })
-
 local InfiniteJumpToggle = PlayerTab:AddToggle("Infinite Jump Toggle", {
     Title = "PULO INFINITO",
     Default = false,
@@ -1223,7 +1204,7 @@ HideUIToggle:OnChanged(function(value)
 end)
 
 
-MiscTab:AddSection("Opções De Server")
+MiscTab:AddSection("Opções Do Server")
 
 MiscTab:AddToggle("Auto Hop Server", {
     Title = "Auto Hop Server",
@@ -1315,6 +1296,7 @@ end)
 Players.PlayerRemoving:Connect(function()
     PlayerDropdown:SetValues(UpdatePlayerList())
 end)
+
 
 -- Notificação inicial
 Fluent:Notify({
