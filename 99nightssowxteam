@@ -1,10 +1,25 @@
+--[[
+
+  RRRRR   OOOOO  DDDDD   RRRRR    III  GGGGG   OOOOO
+  R    R  O   O  D    D  R    R    I   G       O   O
+  RRRRR   O   O  D    D  RRRRR     I   G  GG   O   O
+  R   R   O   O  D    D  R   R     I   G   G   O   O
+  R    R  O O O  D    D  R    R   III  GGGGG   OOOOO
+
+
+--]]
+
+
+
+
+
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/jhowmodderxxxx/haxstore/refs/heads/main/savemanagerhax"))()
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/jhowmodderxxxx/haxstore/refs/heads/main/interface"))()
 
 local Window = Fluent:CreateWindow({
-    Title = "SOWxTEAM",
-    SubTitle = "By RodrigoGTyx | 99 NIGHTS | SCRIPT ATUALIZADO DIA 25/08/25",
+    Title = "RODRIGO HUB",
+    SubTitle = "By RodrigoGTyx | 99 NIGHTS |",
     TabWidth = 160,
     Size = UDim2.fromOffset(520, 350),
     Acrylic = false,
@@ -55,7 +70,7 @@ ImageLabel.AnchorPoint = Vector2.new(0.5, 0.5)
 ImageLabel.BackgroundTransparency = 1
 ImageLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
 ImageLabel.Size = UDim2.new(1, 20, 1, 20)
-ImageLabel.Image = "rbxassetid://125930606242191"
+ImageLabel.Image = "rbxassetid://120162036237097"
 ImageLabel.ZIndex = 1
 
 -- Movimentação do botão flutuante (drag)
@@ -90,7 +105,7 @@ task.wait(0.1) -- Garante que a UI está pronta
 -- Adiciona a logo grande no fundo roxo vazio
 local Logo = Instance.new("ImageLabel")
 Logo.Name = "CustomLogo"
-Logo.Image = "rbxassetid://125930606242191"
+Logo.Image = "rbxassetid://120162036237097"
 Logo.BackgroundTransparency = 1
 Logo.Size = UDim2.new(0, 120, 0, 120)                  -- LOGO grande! Ajuste aqui se quiser maior/menor
 Logo.Position = UDim2.new(0, 15, 1, -140)  -- um pouco mais para a esquerda
