@@ -21,8 +21,8 @@ local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/j
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/jhowmodderxxxx/haxstore/refs/heads/main/interface"))()
 
 local Window = Fluent:CreateWindow({
-    Title = "SOWxTEAM",
-    SubTitle = "By RodrigoGTyx | FISCH | SCRIPT ATUALIZADO DIA 30/08/25",
+    Title = "RODRIGO HUB",
+    SubTitle = "By RodrigoGTyx | FISCH |",
     TabWidth = 160,
     Size = UDim2.fromOffset(520, 350),
     Acrylic = false,
@@ -79,7 +79,7 @@ ImageLabel.AnchorPoint = Vector2.new(0.5, 0.5)
 ImageLabel.BackgroundTransparency = 1
 ImageLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
 ImageLabel.Size = UDim2.new(1, 20, 1, 20)
-ImageLabel.Image = "rbxassetid://125930606242191"
+ImageLabel.Image = "rbxassetid://120162036237097"
 ImageLabel.ZIndex = 1
 
 -- Movimentação do botão flutuante (drag)
@@ -112,7 +112,7 @@ task.wait(0.1) -- Garante que a UI está pronta
 -- Adiciona a logo grande no fundo roxo vazio
 local Logo = Instance.new("ImageLabel")
 Logo.Name = "CustomLogo"
-Logo.Image = "rbxassetid://125930606242191"
+Logo.Image = "rbxassetid://120162036237097"
 Logo.BackgroundTransparency = 1
 Logo.Size = UDim2.new(0, 120, 0, 120)                  -- LOGO grande! Ajuste aqui se quiser maior/menor
 Logo.Position = UDim2.new(0, 15, 1, -140)  -- um pouco mais para a esquerda
@@ -539,7 +539,6 @@ MainTab:AddButton({
 })
 
 
-
 -- Teleporte para Jogadores
 TeleportTab:AddSection("TELEPORTE PARA JOGADORES")
 
@@ -550,21 +549,44 @@ local PlayerDropdown = TeleportTab:AddDropdown("PlayerTeleport", {
     Default = nil,
 })
 
+local selectedPlayer = nil
+
+-- Atualiza o jogador selecionado no dropdown
 PlayerDropdown:OnChanged(function(selected)
-    if selected then
-        local player = Players:FindFirstChild(selected)
-        if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            pcall(function()
-                LocalPlayer.Character.HumanoidRootPart.CFrame = player.Character.HumanoidRootPart.CFrame
+    selectedPlayer = selected
+end)
+
+TeleportTab:AddButton({
+    Title = "TELEPORTAR PARA O JOGADOR",
+    Description = "Clique para teleportar para o jogador selecionado",
+    Callback = function()
+        if selectedPlayer then
+            local player = Players:FindFirstChild(selectedPlayer)
+            if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                pcall(function()
+                    LocalPlayer.Character.HumanoidRootPart.CFrame = player.Character.HumanoidRootPart.CFrame
+                    Fluent:Notify({
+                        Title = "Teleporte",
+                        Content = "Teleportado para " .. player.Name,
+                        Duration = 3
+                    })
+                end)
+            else
                 Fluent:Notify({
-                    Title = "Teleporte",
-                    Content = "Teleportado para " .. player.Name,
+                    Title = "Erro",
+                    Content = "Jogador não encontrado ou sem personagem.",
                     Duration = 3
                 })
-            end)
+            end
+        else
+            Fluent:Notify({
+                Title = "Erro",
+                Content = "Por favor, selecione um jogador primeiro.",
+                Duration = 3
+            })
         end
     end
-end)
+})
 
 TeleportTab:AddButton({
     Title = "🔄 ATUALIZAR LISTA",
@@ -578,6 +600,10 @@ TeleportTab:AddButton({
         })
     end
 })
+
+
+
+
 local InfiniteJumpToggle = PlayerTab:AddToggle("Infinite Jump Toggle", {
     Title = "PULO INFINITO",
     Default = false,
