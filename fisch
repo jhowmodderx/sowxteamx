@@ -1,3 +1,5 @@
+
+
 --[[
 
   RRRRR   OOOOO  DDDDD   RRRRR    III  GGGGG   OOOOO
@@ -9,6 +11,95 @@
 
 --]]
 
+local PlayerGui = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+
+
+local Blur = Instance.new("BlurEffect")
+Blur.Name = "LoadingBlurEffect"
+Blur.Size = 0 -- Começa sem desfoque
+Blur.Parent = game.Lighting
+
+
+local LoadingScreen = Instance.new("ScreenGui")
+LoadingScreen.Name = "FluentLoadingScreen"
+LoadingScreen.ZIndexBehavior = Enum.ZIndexBehavior.Global
+LoadingScreen.Parent = PlayerGui
+
+
+local BackgroundFrame = Instance.new("Frame")
+BackgroundFrame.Size = UDim2.new(1, 0, 1, 0)
+BackgroundFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+BackgroundFrame.BackgroundTransparency = 0.5 
+BackgroundFrame.Parent = LoadingScreen
+
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+TitleLabel.Position = UDim2.new(0.5, 0, 0.5, -30)
+TitleLabel.Size = UDim2.new(0.5, 0, 0.1, 0)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Font = Enum.Font.SourceSansBold
+TitleLabel.Text = "RODRIGO HUB"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.TextSize = 40
+TitleLabel.Parent = BackgroundFrame
+
+
+local ProgressBarContainer = Instance.new("Frame")
+ProgressBarContainer.Size = UDim2.new(0.3, 0, 0, 8) 
+ProgressBarContainer.AnchorPoint = Vector2.new(0.5, 0.5)
+ProgressBarContainer.Position = UDim2.new(0.5, 0, 0.5, 30)
+ProgressBarContainer.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+ProgressBarContainer.BorderSizePixel = 0
+ProgressBarContainer.Parent = BackgroundFrame
+
+local ProgressBarCorner = Instance.new("UICorner")
+ProgressBarCorner.CornerRadius = UDim.new(1, 0)
+ProgressBarCorner.Parent = ProgressBarContainer
+
+local ProgressBar = Instance.new("Frame")
+ProgressBar.Size = UDim2.new(0, 0, 1, 0)
+ProgressBar.BackgroundColor3 = Color3.fromRGB(150, 0, 255)
+ProgressBar.BorderSizePixel = 0
+ProgressBar.Parent = ProgressBarContainer
+
+local ProgressBarCornerFill = Instance.new("UICorner")
+ProgressBarCornerFill.CornerRadius = UDim.new(1, 0)
+ProgressBarCornerFill.Parent = ProgressBar
+
+
+TweenService:Create(Blur, TweenInfo.new(0.5), {Size = 24}):Play()
+
+
+local duration = 5 
+local info = TweenInfo.new(duration, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+
+local progressTween = TweenService:Create(ProgressBar, info, {
+    Size = UDim2.new(1, 0, 1, 0) 
+})
+
+progressTween:Play()
+
+
+task.wait(duration) 
+
+
+TweenService:Create(BackgroundFrame, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
+TweenService:Create(TitleLabel, TweenInfo.new(0.5), {TextTransparency = 1}):Play()
+TweenService:Create(ProgressBarContainer, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
+TweenService:Create(ProgressBar, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
+
+
+
+TweenService:Create(Blur, TweenInfo.new(0.5), {Size = 0}):Play() 
+
+task.wait(0.5) 
+
+
+LoadingScreen:Destroy()
+Blur:Destroy()
 
 
 local PreloadConstants = {
@@ -31,6 +122,8 @@ local Window = Fluent:CreateWindow({
 })
 
 
+
+
 local DeviceType = game:GetService("UserInputService").TouchEnabled and "Mobile" or "PC"
 
 local UserInputService = game:GetService("UserInputService")
@@ -47,6 +140,8 @@ local PlayerGui = Player:WaitForChild("PlayerGui")
 local ClickButton = Instance.new("ScreenGui")
 ClickButton.Parent = PlayerGui
 ClickButton.ResetOnSpawn = false  -- Impede que o ScreenGui desapareça quando o personagem for resetado
+
+
 
 -- Criação do Frame com o botão flutuante
 local MainFrame = Instance.new("Frame")
@@ -106,13 +201,14 @@ UserInputService.InputChanged:Connect(function(input)
         local delta = input.Position - mousePos
         MainFrame.Position = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X, framePos.Y.Scale, framePos.Y.Offset + delta.Y)
     end
+    
 end)
 task.wait(0.1) -- Garante que a UI está pronta
 
 -- Adiciona a logo grande no fundo roxo vazio
 local Logo = Instance.new("ImageLabel")
 Logo.Name = "CustomLogo"
-Logo.Image = "rbxassetid://120162036237097"
+Logo.Image = "rbxassetid://91672656350466"
 Logo.BackgroundTransparency = 1
 Logo.Size = UDim2.new(0, 120, 0, 120)                  -- LOGO grande! Ajuste aqui se quiser maior/menor
 Logo.Position = UDim2.new(0, 15, 1, -140)  -- um pouco mais para a esquerda
@@ -191,6 +287,8 @@ TextButton.MouseButton1Click:Connect(function()
     game:GetService("VirtualInputManager"):SendKeyEvent(true, "LeftAlt", false, game)
     game:GetService("VirtualInputManager"):SendKeyEvent(false, "LeftAlt", false, game)
 end)
+
+
 
 -- Criando as Tabs
 local MainTab = Window:AddTab({ Title = "Auto Farm", Icon = "home" })
@@ -323,84 +421,151 @@ local function UpdatePlayerList()
     return playerList
 end
 
+
 -- ABA: FARM AUTOMATICO
-local AutoCastToggle = MainTab:AddToggle("AutoCast", {
-    Title = "AUTO CAST",
+
+-- Função principal que gerencia o estado do Auto Farm
+local function StartStopAutoFarm()
+    -- Garante que todos os estados de automação individuais sejam definidos
+    -- com base no estado do 'AutoFarm' e 'FarmMode'.
+
+    Settings.AutoCast = Settings.AutoFarm
+    Settings.AutoShake = Settings.AutoFarm
+    Settings.AutoReel = Settings.AutoFarm
+
+    if Settings.AutoFarm then
+        -- Define os modos com base na opção selecionada no dropdown
+        if Settings.FarmMode == "Safe" then
+            -- Configurações para AUTO FARM SAFE
+            Settings.CastMode = "Legit"
+            Settings.ShakeMode = "Navigation"
+            Settings.ReelMode = "Legit"
+        elseif Settings.FarmMode == "Normal" then
+            -- Configurações para AUTO FARM NORMAL
+            Settings.CastMode = "Legit"
+            Settings.ShakeMode = "Navigation"
+            Settings.ReelMode = "Blatant"
+        end
+        
+        -- Inicia as três funções de automação (Cast, Shake, Reel)
+        -- dentro de uma única 'thread' de controle para manter o código limpo.
+        spawn(function()
+            while Settings.AutoFarm do
+                -- As funções AutoCast, AutoShake e AutoReel precisam existir
+                -- e usar os valores de Settings.CastMode, Settings.ShakeMode,
+                -- e Settings.ReelMode internamente.
+                AutoCast()
+                AutoShake()
+                AutoReel()
+                -- Pausa curta para evitar o uso excessivo de recursos.
+                task.wait() 
+            end
+        end)
+    end
+end
+
+-- 1. DROP DOWN: MODO FARM (Define as configurações do farm)
+local FarmModeDropdown = MainTab:AddDropdown("FarmMode", {
+    Title = "TIPO DE AUTO FARM",
+    Values = {"Safe", "Normal"},
+    Multi = false,
+    Default = "Normal", -- 'Normal' como padrão (Blatant no Reel)
+})
+
+FarmModeDropdown:OnChanged(function(value)
+    Settings.FarmMode = value
+    -- Se o Auto Farm já estiver ligado, atualiza o modo imediatamente.
+    if Settings.AutoFarm then
+        StartStopAutoFarm()
+    end
+end)
+
+-- 2. TOGGLE: AUTO FARM (Liga e Desliga)
+local AutoFarmToggle = MainTab:AddToggle("AutoFarm", {
+    Title = "AUTO FARM",
     Default = false
 })
 
-AutoCastToggle:OnChanged(function(value)
-    Settings.AutoCast = value
-    spawn(function()
-        while Settings.AutoCast do
-            AutoCast()
-            task.wait(1)
+AutoFarmToggle:OnChanged(function(value)
+    Settings.AutoFarm = value
+    StartStopAutoFarm()
+end)
+
+local Players = game:GetService("Players")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local LocalPlayer = Players.LocalPlayer
+
+local isAutoEquipActive = false
+local equipLoopThread = nil
+
+-- Suponha que 'Fluent' e 'MainTab' já foram definidos.
+
+local function EquipRodByInput()
+    -- Simula o pressionar da tecla '1'
+    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.One, false, game)
+    task.wait(0.1)
+    -- Simula o soltar da tecla '1'
+    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.One, false, game)
+end
+
+local function StartEquipLoop()
+    -- Cria um loop contínuo para forçar o slot 1
+    equipLoopThread = spawn(function()
+        while isAutoEquipActive do
+            local character = LocalPlayer.Character
+            if character then
+                local equippedTool = character:FindFirstChildOfClass("Tool")
+                
+                -- Se não houver ferramenta equipada OU se a ferramenta equipada 
+                -- não for a vara (assumindo que a vara é a primeira ferramenta e deve estar no slot 1)
+                -- Nota: Como estamos forçando o SLOT 1, podemos simplesmente forçar o input
+                
+                -- Checa se o slot 1 não está ativo, forçando o input novamente
+                if not equippedTool or equippedTool.Parent ~= character then
+                    EquipRodByInput()
+                end
+            end
+            task.wait(0.5) -- Pequeno atraso para não sobrecarregar o cliente
         end
+        equipLoopThread = nil
     end)
-end)
+end
 
-local CastModeDropdown = MainTab:AddDropdown("CastMode", {
-    Title = "MODO CAST",
-    Values = {"Legit", "Blatant"},
-    Multi = false,
-    Default = "Legit",
-})
+local function StopEquipLoop()
+    -- Interrompe o loop
+    isAutoEquipActive = false
+    if equipLoopThread then
+        task.cancel(equipLoopThread)
+        equipLoopThread = nil
+    end
+end
 
-CastModeDropdown:OnChanged(function(value)
-    Settings.CastMode = value
-end)
 
-local AutoShakeToggle = MainTab:AddToggle("AutoShake", {
-    Title = "AUTO SHAKE",
+-- TOGGLE: AUTO EQUIPAR VARA
+local autoEquipToggle = MainTab:AddToggle("AutoEquipRod", {
+    Title = "AUTO EQUIPAR VARA (ATIVE)",
     Default = false
 })
 
-AutoShakeToggle:OnChanged(function(value)
-    Settings.AutoShake = value
-    spawn(function()
-        while Settings.AutoShake do
-            AutoShake()
-            task.wait()
-        end
-    end)
+autoEquipToggle:OnChanged(function(value)
+    isAutoEquipActive = value
+    
+    if isAutoEquipActive then
+        StartEquipLoop()
+    else
+        StopEquipLoop()
+    end
 end)
 
-local ShakeModeDropdown = MainTab:AddDropdown("ShakeMode", {
-    Title = "MODO SHAKE",
-    Values = {"Navigation", "Mouse"},
-    Multi = false,
-    Default = "Navigation",
-})
-
-ShakeModeDropdown:OnChanged(function(value)
-    Settings.ShakeMode = value
+-- Lógica de reequipar no respawn, garantindo que o loop seja reiniciado se necessário
+LocalPlayer.CharacterAdded:Connect(function(character)
+    if isAutoEquipActive and not equipLoopThread then
+        -- Pequeno atraso no respawn e reinicia o loop
+        task.wait(0.5) 
+        StartEquipLoop()
+    end
 end)
 
-local AutoReelToggle = MainTab:AddToggle("AutoReel", {
-    Title = "AUTO REEL",
-    Default = false
-})
-
-AutoReelToggle:OnChanged(function(value)
-    Settings.AutoReel = value
-    spawn(function()
-        while Settings.AutoReel do
-            AutoReel()
-            task.wait()
-        end
-    end)
-end)
-
-local ReelModeDropdown = MainTab:AddDropdown("ReelMode", {
-    Title = "MODO REEL",
-    Values = {"Legit", "Blatant"},
-    Multi = false,
-    Default = "Blatant",
-})
-
-ReelModeDropdown:OnChanged(function(value)
-    Settings.ReelMode = value
-end)
 
 -- ABA: TELEPORTES
 local farmSpots = {
@@ -1230,61 +1395,57 @@ HideUIToggle:OnChanged(function(value)
 end)
 
 
+local AutoHopEnabled = false
+
 MiscTab:AddSection("Opções Do Server")
 
 MiscTab:AddToggle("Auto Hop Server", {
     Title = "Auto Hop Server",
     Default = false,
     Callback = function(value)
+        AutoHopEnabled = value
+        
         if value then
-            -- Função para fazer o hop de servidor
-            local function hopToNewServer()
+            spawn(function()
                 local TeleportService = game:GetService("TeleportService")
                 local HttpService = game:GetService("HttpService")
                 
-                -- Tentar encontrar um servidor com vaga
-                local success, servers = pcall(function()
-                    local response = HttpService:JSONDecode(game:HttpGetAsync(
-                        "https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Asc&limit=100"
-                    ))
-                    return response.data
-                end)
-                
-                if success and servers then
-                    local availableServers = {}
-                    for _, server in ipairs(servers) do
-                        if server.playing < server.maxPlayers and server.id ~= game.JobId then
-                            table.insert(availableServers, server.id)
-                        end
-                    end
+                local function hopToNewServer()
+                    local success, servers = pcall(function()
+                        local response = HttpService:JSONDecode(game:HttpGetAsync(
+                            "https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Asc&limit=100"
+                        ))
+                        return response.data
+                    end)
                     
-                    if #availableServers > 0 then
-                        local randomServer = availableServers[math.random(1, #availableServers)]
-                        TeleportService:TeleportToPlaceInstance(game.PlaceId, randomServer)
+                    if success and servers then
+                        local availableServers = {}
+                        for _, server in ipairs(servers) do
+                            if server.playing < server.maxPlayers and server.id ~= game.JobId then
+                                table.insert(availableServers, server.id)
+                            end
+                        end
+                        
+                        if #availableServers > 0 then
+                            local randomServer = availableServers[math.random(1, #availableServers)]
+                            TeleportService:TeleportToPlaceInstance(game.PlaceId, randomServer)
+                        else
+                            TeleportService:Teleport(game.PlaceId)
+                        end
                     else
                         TeleportService:Teleport(game.PlaceId)
                     end
-                else
-                    TeleportService:Teleport(game.PlaceId)
                 end
-            end
-            
-            -- Executa o hop imediatamente quando ativado
-            hopToNewServer()
-            
-            -- Conecta para continuar hopping enquanto o toggle estiver ativo
-            spawn(function()
-                while wait(5) and _ENV.AutoHopEnabled do
+                
+                hopToNewServer()
+                
+                while wait(5) and AutoHopEnabled do
                     hopToNewServer()
                 end
             end)
-        else
-            -- Desativa o auto hop
-            _ENV.AutoHopEnabled = false
         end
     end
 })
-
 -- =========================
 -- 🔹 ANTI AFK
 -- =========================
@@ -1326,7 +1487,7 @@ end)
 
 -- Notificação inicial
 Fluent:Notify({
-    Title = "SOWxTEAM",
+    Title = "RodrigoHub",
     Content = "Script carregado com sucesso!",
     Duration = 5
 })
